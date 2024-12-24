@@ -6,7 +6,6 @@ By this version, features include:
 - List of Courses: this module allows users to view a list of courses by category.
 - Course Detail: this module allows users to view the course's information including its objective, lessons, timeline, reviews, price, etc.
 - Course Tracking: this module allows users to view their in-progress and completed courses.
-- Chat with Instructors: this module allows users to chat directly with the course owner/instructor in real-time.
 - Settings Page: this module allows users to manage the settings of their account in the application such as stat, payment, notifications, privacy and security, and theme.
 
 # Development Setup
