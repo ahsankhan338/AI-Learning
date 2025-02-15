@@ -1,21 +1,41 @@
+import 'package:aieducator/provider/auth_provider.dart';
+import 'package:aieducator/router/go_router.dart';
 import 'package:flutter/material.dart';
-import 'screens/root_app.dart';
-import 'theme/color.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  final authProvider = AuthProvider();
+  AppRouter(authProvider);
+
+  runApp(
+    ChangeNotifierProvider.value(
+      value: authProvider,
+      child: const EduApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class EduApp extends StatelessWidget {
+  const EduApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Online Course App',
+    // Access the router through the provider
+    final appRouter = AppRouter(Provider.of<AuthProvider>(context));
+
+    return MaterialApp.router(
+      title: "AI Educator",
+      routerConfig: appRouter.router,
       theme: ThemeData(
-        primaryColor: AppColor.primary,
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: Color(0xFFD9D9D9)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
       ),
-      home: const RootApp(),
+      debugShowCheckedModeBanner: false,
+      restorationScopeId: 'aieducator_app',
     );
   }
 }

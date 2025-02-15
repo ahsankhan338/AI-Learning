@@ -1,6 +1,6 @@
 {
-    "name": "app_flutter_online_course",
-    "short_name": "app_flutter_online_course",
+    "name": "aieducator",
+    "short_name": "aieducator",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
