@@ -1,4 +1,5 @@
 import 'package:aieducator/api/auth_api.dart';
+import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/constants/colors.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
   bool rememberMe = false;
 
   @override
@@ -122,35 +124,46 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 25),
 
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final Authentication authentication = Authentication();
+                  isLoading
+                      ? const SpinLoader()
+                      : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: Colors.grey,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                isLoading = true;
+                              });
+                              final Authentication authentication =
+                                  Authentication();
 
-                        await authentication
-                            .logIn(
-                                email: emailController.text,
-                                password: passwordController.text)
-                            .then((onValue) => {
-                                  Provider.of<AuthProvider>(
-                                          listen: false, context)
-                                      .login(token: "token")
-                                })
-                            .catchError((onError) => {print(onError)});
-                      }
-                    },
-                    child: const Text('Log in',
-                        style: TextStyle(color: Colors.black)),
-                  ),
+                              await authentication
+                                  .logIn(
+                                      email: emailController.text,
+                                      password: passwordController.text)
+                                  .then((onValue) => {
+                                        Provider.of<AuthProvider>(
+                                                listen: false, context)
+                                            .login(token: "token")
+                                      })
+                                  .catchError((onError) => {print(onError)})
+                                  .whenComplete(() => {
+                                        setState(() {
+                                          isLoading = false;
+                                        })
+                                      });
+                            }
+                          },
+                          child: const Text('Log in',
+                              style: TextStyle(color: Colors.black)),
+                        ),
 
                   const SizedBox(height: 45),
                   const Row(

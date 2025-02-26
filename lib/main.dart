@@ -20,7 +20,6 @@ class EduApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Access the router through the provider
     final appRouter = AppRouter(Provider.of<AuthProvider>(context));
 
     return MaterialApp.router(
