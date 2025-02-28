@@ -143,29 +143,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                 isLoading = true;
                               });
 
+                              // Get the provider before async operations
+                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
                               try {
-                                final Authentication authentication =
-                                    Authentication();
+                                final Authentication authentication = Authentication();
                                 final result = await authentication.logIn(
                                     email: emailController.text,
                                     password: passwordController.text);
 
                                 if (!mounted) return;
 
-                                Provider.of<AuthProvider>(context,
-                                        listen: false)
-                                    .login(token: result['token'].toString());
+                                authProvider.login(token: result['token'].toString());
 
-                                showToast(
-                                    message: result['message'] ??
-                                        "Login successful");
+                                showToast(message: result['message'] ?? "Login successful");
                               } catch (error) {
-                                
                                 showToast(
                                     message:
                                         "Login failed: ${error.toString()}",
                                     backgroundColor: Colors.red);
-                                print("error: $error");
                               } finally {
                                 if (mounted) {
                                   setState(() {

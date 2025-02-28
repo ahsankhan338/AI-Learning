@@ -18,14 +18,32 @@ class BottomNavigationBarScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
       child: Scaffold(
-        appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            centerTitle: true,
-            title: Text(
-              authProvider.user!.name.toString(),
-              style: const TextStyle(color: Colors.grey),
-            )),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(100.0),
+          child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              flexibleSpace: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Welcome!",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 28),
+                    ),
+                    Text(
+                      authProvider.user!.name.toString(),
+                      style: const TextStyle(color: Colors.grey, fontSize: 18),
+                    ),
+                  ],
+                ),
+              )),
+        ),
         backgroundColor: Colors.transparent,
         body: navigationShell,
         bottomNavigationBar: Container(

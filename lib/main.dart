@@ -3,35 +3,38 @@ import 'package:aieducator/router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   final authProvider = AuthProvider();
-  AppRouter(authProvider);
+  final appRouter = AppRouter(authProvider);
 
   runApp(
     ChangeNotifierProvider.value(
       value: authProvider,
-      child: const EduApp(),
+      child: EduApp(appRouter: appRouter),
     ),
   );
 }
 
 class EduApp extends StatelessWidget {
-  const EduApp({super.key});
+  final AppRouter appRouter;
+
+  const EduApp({super.key, required this.appRouter});
 
   @override
   Widget build(BuildContext context) {
-    final appRouter = AppRouter(Provider.of<AuthProvider>(context));
-
     return MaterialApp.router(
       title: "AI Learner",
       routerConfig: appRouter.router,
       theme: ThemeData(
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-            backgroundColor: Color(0xFFD9D9D9)),
+        fontFamily: "Poppins",
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.light,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFFD9D9D9),
         ),
         useMaterial3: true,
       ),
