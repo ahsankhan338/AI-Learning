@@ -15,9 +15,9 @@ class ProfileScreen extends StatelessWidget {
         children: [
           ElevatedButton(
             onPressed: () {
-              Provider.of<AuthProvider>(listen: false,context).logout();
+              Provider.of<AuthProvider>(listen: false, context).logout();
             },
-            child: Text(
+            child: const Text(
               "Logout",
               style: TextStyle(fontSize: 35),
             ),

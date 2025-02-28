@@ -1,5 +1,6 @@
 import 'package:aieducator/api/auth_api.dart';
 import 'package:aieducator/components/spinner.dart';
+import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/constants/colors.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -141,24 +142,37 @@ class _LoginScreenState extends State<LoginScreen> {
                               setState(() {
                                 isLoading = true;
                               });
-                              final Authentication authentication =
-                                  Authentication();
 
-                              await authentication
-                                  .logIn(
-                                      email: emailController.text,
-                                      password: passwordController.text)
-                                  .then((onValue) => {
-                                        Provider.of<AuthProvider>(
-                                                listen: false, context)
-                                            .login(token: "token")
-                                      })
-                                  .catchError((onError) => {print(onError)})
-                                  .whenComplete(() => {
-                                        setState(() {
-                                          isLoading = false;
-                                        })
-                                      });
+                              try {
+                                final Authentication authentication =
+                                    Authentication();
+                                final result = await authentication.logIn(
+                                    email: emailController.text,
+                                    password: passwordController.text);
+
+                                if (!mounted) return;
+
+                                Provider.of<AuthProvider>(context,
+                                        listen: false)
+                                    .login(token: result['token'].toString());
+
+                                showToast(
+                                    message: result['message'] ??
+                                        "Login successful");
+                              } catch (error) {
+                                
+                                showToast(
+                                    message:
+                                        "Login failed: ${error.toString()}",
+                                    backgroundColor: Colors.red);
+                                print("error: $error");
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              }
                             }
                           },
                           child: const Text('Log in',

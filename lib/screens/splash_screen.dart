@@ -34,7 +34,6 @@ class _SplashScreenState extends State<SplashScreen>
         if (mounted) {
           final authProvider =
               Provider.of<AuthProvider>(context, listen: false);
-          // authProvider.login();
           authProvider.completeSplash();
         }
       });

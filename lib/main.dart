@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
   AppRouter(authProvider);
 
@@ -23,10 +24,11 @@ class EduApp extends StatelessWidget {
     final appRouter = AppRouter(Provider.of<AuthProvider>(context));
 
     return MaterialApp.router(
-      title: "AI Educator",
+      title: "AI Learner",
       routerConfig: appRouter.router,
       theme: ThemeData(
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: Color(0xFFD9D9D9)),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Color(0xFFD9D9D9)),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.light,
@@ -34,7 +36,7 @@ class EduApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      restorationScopeId: 'aieducator_app',
+      restorationScopeId: 'ai_learner',
     );
   }
 }
