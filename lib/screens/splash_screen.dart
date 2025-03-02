@@ -1,5 +1,5 @@
 // splash_screen.dart
-import 'package:aieducator/constants/colors.dart';
+import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

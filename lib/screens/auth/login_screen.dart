@@ -1,7 +1,7 @@
 import 'package:aieducator/api/auth_api.dart';
 import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
-import 'package:aieducator/constants/colors.dart';
+import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -70,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value!.isEmpty) {
                         return "Password is Required";
                       }
+                      return null;
                     },
                     obscureText: true,
                     decoration: InputDecoration(
@@ -106,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
                                 activeTrackColor: Colors.grey,
-                                activeColor: Colors.white,
+                                activeColor: Colors.white70,
                                 thumbColor:
                                     WidgetStateProperty.all(Colors.white),
                                 trackOutlineColor:
@@ -119,8 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const Text('Forgot password?',
-                          style: TextStyle(color: Colors.white70)),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('Forgot password?',
+                            style: TextStyle(color: Colors.white70)),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 25),
@@ -144,19 +148,25 @@ class _LoginScreenState extends State<LoginScreen> {
                               });
 
                               // Get the provider before async operations
-                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                              final authProvider = Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false);
 
                               try {
-                                final Authentication authentication = Authentication();
+                                final Authentication authentication =
+                                    Authentication();
                                 final result = await authentication.logIn(
                                     email: emailController.text,
                                     password: passwordController.text);
 
                                 if (!mounted) return;
 
-                                authProvider.login(token: result['token'].toString());
+                                authProvider.login(
+                                    token: result['token'].toString());
 
-                                showToast(message: result['message'] ?? "Login successful");
+                                showToast(
+                                    message: result['message'] ??
+                                        "Login successful");
                               } catch (error) {
                                 showToast(
                                     message:
@@ -171,8 +181,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             }
                           },
-                          child: const Text('Log in',
-                              style: TextStyle(color: Colors.black)),
+                          child: Text('Log in',
+                              style: AppTextStyles.buttonTextStyles()),
                         ),
 
                   const SizedBox(height: 45),
@@ -192,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Google Sign In Button
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 50),
                       backgroundColor: Colors.grey,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
@@ -202,27 +212,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     icon: const FaIcon(FontAwesomeIcons.google,
                         color: Colors.white),
-                    label: const Text('Log In with Google',
-                        style: TextStyle(color: Colors.black)),
+                    label: Text('Log In with Google',
+                        style: AppTextStyles.buttonTextStyles()),
                     onPressed: () {},
                   ),
                   const SizedBox(height: 16),
 
                   // Register Link
-                  const Text.rich(
+                  Text.rich(
                     TextSpan(
                       text: "Don't have an account? ",
-                      style: TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: Colors.white70),
                       children: [
-                        TextSpan(
-                          text: "register here",
-                          style: TextStyle(
-                              color: Colors.blueAccent,
-                              fontWeight: FontWeight.bold),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: TextButton(
+                            onPressed: () {},
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.blueAccent,
+                            ),
+                            child: const Text(
+                              "register here",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                  )
                 ],
               ),
             ),

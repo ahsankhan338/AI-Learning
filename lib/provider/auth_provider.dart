@@ -18,13 +18,10 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> login({required String token}) async {
     try {
-      print("token: $token");
       _user = await UserApi.getUser(token);
       _isAuthenticated = true;
-      print("user: $_user");
     } catch (e) {
       logout();
-      print("Login error: $e");      
     } finally {
       notifyListeners();
     }

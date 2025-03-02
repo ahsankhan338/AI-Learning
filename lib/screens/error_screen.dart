@@ -1,4 +1,4 @@
-import 'package:aieducator/router/go_router.dart';
+import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
