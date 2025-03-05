@@ -63,7 +63,9 @@ class BottomNavigationBarScreen extends StatelessWidget {
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: location == '/home'
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
                 children: [
                   if (isMainRoute) ...[
                     if (location == '/home') ...[
@@ -107,7 +109,8 @@ class BottomNavigationBarScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         body: navigationShell,
         bottomNavigationBar: Container(
-          margin: const EdgeInsets.only(left: 40,right: 40 ,top: 5, bottom: 20),
+          margin:
+              const EdgeInsets.only(left: 40, right: 40, top: 5, bottom: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
             // Remove color from here

@@ -2,7 +2,7 @@ import 'package:aieducator/components/bottom_navigation_bar.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/screens/auth/login_screen.dart';
 import 'package:aieducator/screens/certificates/certificate_screen.dart';
-import 'package:aieducator/screens/courses/course_screen.dart';
+import 'package:aieducator/screens/ebook/e_book.dart';
 import 'package:aieducator/screens/error_screen.dart';
 import 'package:aieducator/screens/home/courseName/availaible_courses.dart';
 import 'package:aieducator/screens/home/courseName/nearby_institute.dart';
@@ -104,7 +104,7 @@ class AppRouter {
           GoRoute(
             path: AppRoutes.eBook.path,
             name: AppRoutes.eBook.name,
-            builder: (_, __) => const CourseScreen(),
+            builder: (_, __) => const EbookScreen(),
           ),
         ],
       );
