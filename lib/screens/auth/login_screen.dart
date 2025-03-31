@@ -164,14 +164,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 authProvider.login(
                                     token: result['token'].toString());
 
-                                showToast(
-                                    message: result['message'] ??
-                                        "Login successful");
+                                // showToast(message: result['message']);
                               } catch (error) {
+                                final errorMessage = error
+                                    .toString()
+                                    .replaceAll('Exception: ', '');
                                 showToast(
-                                    message:
-                                        "Login failed: ${error.toString()}",
-                                    backgroundColor: Colors.red);
+                                  message: errorMessage,
+                                  backgroundColor: Colors.red,
+                                );
                               } finally {
                                 if (mounted) {
                                   setState(() {

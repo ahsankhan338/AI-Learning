@@ -67,10 +67,11 @@ class AppRouter {
             builder: (_, __) => const HomeScreen(),
             routes: [
               GoRoute(
-                path: 'course/:name',
+                path: 'course/:name/:categoryId',
                 name: 'courseDetail',
                 builder: (_, state) => CourseName(
                   name: state.pathParameters['name'] ?? '',
+                  categoryId: state.pathParameters['categoryId'] ?? '',
                 ),
                 routes: [
                   GoRoute(
@@ -90,7 +91,9 @@ class AppRouter {
                   GoRoute(
                     path: 'availableCourses',
                     name: 'availableCourses',
-                    builder: (_, state) => AvailaibleCoursesScreen(),
+                    builder: (_, state) => AvailaibleCoursesScreen(
+                      categoryId: state.pathParameters['categoryId'] ?? 'Unknown ID',
+                    ),
                   ),
                 ],
               ),
@@ -134,22 +137,22 @@ class AppRouter {
     final isLoggedIn = authProvider.isAuthenticated;
     final location = state.uri.toString();
 
-    // Allow course detail navigation
     if (state.uri.path.startsWith('/home/')) return null;
 
-    // Handle splash screen
     if (!isSplashComplete && location != AppRoutes.splash.path) {
       return AppRoutes.splash.path;
     }
 
-    // Handle authentication
     if (isSplashComplete) {
+      print("token: is in Splash sreen");
       if (!isLoggedIn && !location.startsWith(AppRoutes.login.path)) {
         return AppRoutes.login.path;
       }
+
       if (isLoggedIn &&
           (location == AppRoutes.login.path ||
               location == AppRoutes.splash.path)) {
+        print("token: is in Logged in");
         return AppRoutes.home.path;
       }
     }

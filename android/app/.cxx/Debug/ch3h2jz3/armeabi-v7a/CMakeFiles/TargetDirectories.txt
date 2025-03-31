@@ -1,0 +1,2 @@
+/Users/umairshahid/Desktop/FYP/AI-Learning/android/app/.cxx/Debug/ch3h2jz3/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/umairshahid/Desktop/FYP/AI-Learning/android/app/.cxx/Debug/ch3h2jz3/armeabi-v7a/CMakeFiles/rebuild_cache.dir

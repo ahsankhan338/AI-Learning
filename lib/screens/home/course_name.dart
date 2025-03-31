@@ -3,7 +3,13 @@ import 'package:go_router/go_router.dart';
 
 class CourseName extends StatefulWidget {
   final String name;
-  const CourseName({super.key, required this.name});
+  final String categoryId;
+
+  const CourseName({
+    super.key,
+    required this.name,
+    required this.categoryId,
+  });
 
   @override
   State<CourseName> createState() => _CourseNameState();
@@ -43,7 +49,10 @@ class _CourseNameState extends State<CourseName> {
           onTap: () {
             context.goNamed(
               'availableCourses',
-              pathParameters: {'name': widget.name},
+              pathParameters: {
+                'name': widget.name,
+                'categoryId': widget.categoryId
+              },
             );
           },
         ),

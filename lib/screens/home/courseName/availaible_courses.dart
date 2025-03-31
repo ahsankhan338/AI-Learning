@@ -1,8 +1,25 @@
+import 'package:aieducator/models/course_model.dart';
 import 'package:flutter/material.dart';
 
-class AvailaibleCoursesScreen extends StatelessWidget {
-  const AvailaibleCoursesScreen({super.key});
+class AvailaibleCoursesScreen extends StatefulWidget {
+  final String categoryId;
 
+  const AvailaibleCoursesScreen({super.key, required this.categoryId});
+
+  @override
+  State<AvailaibleCoursesScreen> createState() =>
+      _AvailaibleCoursesScreenState();
+}
+
+class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  List<Course> _courses = [];
+  int _page = 1;
+  bool _hasMore = true;
+  bool _isLoading = false;
+  final int _limit = 10;
+
+  
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -10,7 +27,7 @@ class AvailaibleCoursesScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Card for Python course
+          // Text(categoryId.toString()),
           buildCourseCard(
             imagePath:
                 "assets/images/languages/python.png", // Replace with a Python icon/image
@@ -47,57 +64,31 @@ class AvailaibleCoursesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: IntrinsicHeight(
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            
-            Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              width: 70,
-              height: 70,
+            Text(
+              courseTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(width: 16),
-
-            // Vertical divider with full height
-            Container(
-              width: 1,
-              color: Colors.white,
-              height: double
-                  .infinity, // <-- makes the divider fill available height
+            const SizedBox(height: 8),
+            Text(
+              availability,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
             ),
-            const SizedBox(width: 16),
-
-            // Text on the right
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    courseTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    availability,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    price,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 8),
+            Text(
+              price,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
               ),
             ),
           ],
