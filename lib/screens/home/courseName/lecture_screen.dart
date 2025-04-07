@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 
 class LectureScreen extends StatelessWidget {
   final String courseName;
-  const LectureScreen({super.key, required this.courseName});
+  final String categoryId;
+  const LectureScreen({
+    super.key, 
+    required this.courseName,
+    required this.categoryId,
+  });
 
   @override
   Widget build(BuildContext context) {

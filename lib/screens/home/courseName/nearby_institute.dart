@@ -4,7 +4,13 @@ import 'package:flutter/material.dart';
 
 class NearbyInstituteScreen extends StatelessWidget {
   final String courseName;
-  const NearbyInstituteScreen({super.key, required this.courseName});
+  final String categoryId;
+
+  const NearbyInstituteScreen({
+    super.key, 
+    required this.courseName,
+    required this.categoryId,
+  });
 
   @override
   Widget build(BuildContext context) {

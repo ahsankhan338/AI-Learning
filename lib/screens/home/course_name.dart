@@ -25,9 +25,13 @@ class _CourseNameState extends State<CourseName> {
           icon: Icons.lightbulb_outline,
           text: 'Learn With AI',
           onTap: () {
+            print("Navigating to lectures with name: ${widget.name}, categoryId: ${widget.categoryId}");
             context.goNamed(
               'lectures',
-              pathParameters: {'name': widget.name},
+              pathParameters: {
+                'name': widget.name,
+                'categoryId': widget.categoryId
+              },
             );
           },
         ),
@@ -38,7 +42,10 @@ class _CourseNameState extends State<CourseName> {
           onTap: () {
             context.goNamed(
               'nearbyInstitute',
-              pathParameters: {'name': widget.name},
+              pathParameters: {
+                'name': widget.name,
+                'categoryId': widget.categoryId
+              },
             );
           },
         ),
@@ -71,12 +78,11 @@ class _CourseNameState extends State<CourseName> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(30),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 35),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.white, width: 1),
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [

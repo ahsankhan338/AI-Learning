@@ -79,6 +79,7 @@ class AppRouter {
                     name: 'lectures',
                     builder: (_, state) => LectureScreen(
                       courseName: state.pathParameters['name'] ?? '',
+                      categoryId: state.pathParameters['categoryId'] ?? '',
                     ),
                   ),
                   GoRoute(
@@ -86,6 +87,7 @@ class AppRouter {
                     name: 'nearbyInstitute',
                     builder: (_, state) => NearbyInstituteScreen(
                       courseName: state.pathParameters['name'] ?? 'Unknown',
+                      categoryId: state.pathParameters['categoryId'] ?? 'Unknown ID',
                     ),
                   ),
                   GoRoute(

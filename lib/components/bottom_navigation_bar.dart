@@ -50,7 +50,7 @@ class BottomNavigationBarScreen extends StatelessWidget {
       decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(100.0),
+          preferredSize: const Size.fromHeight(80.0),
           child: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
