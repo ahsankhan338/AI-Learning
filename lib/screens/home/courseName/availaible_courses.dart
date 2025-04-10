@@ -146,7 +146,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
     final double currentScroll = _scrollController.position.pixels;
     final double maxScroll = _scrollController.position.maxScrollExtent;
     final double threshold =
-        maxScroll * 0.9; // Trigger when 90% scrolled (adjust as needed)
+        maxScroll * 1.0; // Trigger when 100% scrolled (adjust as needed)
 
     // Debug Print - uncomment if needed, can be very verbose
     // print("Scroll: ${currentScroll.toStringAsFixed(1)} / ${maxScroll.toStringAsFixed(1)} | Threshold: ${threshold.toStringAsFixed(1)} | hasMore: $_hasMore | isLoading: $_isLoading | isLoadMoreRunning: $_isLoadMoreRunning");
@@ -175,7 +175,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
     }
     print(
         "AvailaibleCoursesScreen: Requesting _fetchData for page ${_page + 1}");
-  
+
     await _fetchData(page: _page + 1);
 
     print("AvailaibleCoursesScreen: Load more fetch completed.");
@@ -288,7 +288,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
             maxLines: 3,
           ),
           const SizedBox(height: 12),
-          
+
           // Availability row with fixed width icon
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -313,9 +313,9 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Program type/price row
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -340,16 +340,16 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
               ),
             ],
           ),
-          
+
           // Rating row (if available)
           if (rating != null && rating.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 24, // Fixed width for icon container
-                  child: const Icon(
+                  child: Icon(
                     Icons.star,
                     color: Colors.amber,
                     size: 18,
@@ -368,7 +368,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
               ],
             ),
           ],
-          
+
           // Duration row (if available)
           if (duration != null && duration.isNotEmpty) ...[
             const SizedBox(height: 8),
