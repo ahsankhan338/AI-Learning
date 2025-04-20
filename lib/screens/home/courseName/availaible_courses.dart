@@ -1,6 +1,7 @@
 import 'package:aieducator/api/course_api.dart';
 import 'package:aieducator/models/course_model.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AvailaibleCoursesScreen extends StatefulWidget {
   final String categoryId;
@@ -252,6 +253,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
               availability: "Available on: ${course.site}",
               price: course.programType,
               rating: course.rating,
+              link: course.url,
               duration: course.duration);
         },
       ),
@@ -263,140 +265,160 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
     required String courseTitle,
     required String availability,
     required String price,
+    String? link,
     String? rating,
     String? duration,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border.all(color: Colors.white, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Course title
-          Text(
-            courseTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            softWrap: true,
-            maxLines: 3,
-          ),
-          const SizedBox(height: 12),
+      child: InkWell(
+        onTap: () async {
+          if (link == null || link.isEmpty) return;
 
-          // Availability row with fixed width icon
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          final Uri url = Uri.parse(link);
+          print(url);
+          try {
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url, mode: LaunchMode.externalApplication);
+            } else {
+              print('Could not launch $url');
+            }
+          } catch (e) {
+            print('Error launching URL: $e');
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(
-                width: 24, // Fixed width for icon container
-                child: Icon(
-                  Icons.public,
-                  color: Colors.white70,
-                  size: 18,
+              // Course title
+              Text(
+                courseTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
+                softWrap: true,
+                maxLines: 3,
               ),
-              Expanded(
-                child: Text(
-                  availability,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                  softWrap: true,
-                ),
-              ),
-            ],
-          ),
+              const SizedBox(height: 12),
 
-          const SizedBox(height: 8),
-
-          // Program type/price row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(
-                width: 24, // Fixed width for icon container
-                child: Icon(
-                  Icons.school,
-                  color: Colors.white70,
-                  size: 18,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  price,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                  softWrap: true,
-                ),
-              ),
-            ],
-          ),
-
-          // Rating row (if available)
-          if (rating != null && rating.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 24, // Fixed width for icon container
-                  child: Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                    size: 18,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    "Rating: $rating stars",
-                    style: const TextStyle(
+              // Availability row with fixed width icon
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 24, // Fixed width for icon container
+                    child: Icon(
+                      Icons.public,
                       color: Colors.white70,
-                      fontSize: 14,
+                      size: 18,
                     ),
-                    softWrap: true,
                   ),
+                  Expanded(
+                    child: Text(
+                      availability,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      softWrap: true,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Program type/price row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 24, // Fixed width for icon container
+                    child: Icon(
+                      Icons.school,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      price,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      softWrap: true,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Rating row (if available)
+              if (rating != null && rating.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 24, // Fixed width for icon container
+                      child: Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        "Rating: $rating stars",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
 
-          // Duration row (if available)
-          if (duration != null && duration.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 24, // Fixed width for icon container
-                  child: const Icon(
-                    Icons.access_time,
-                    color: Colors.white70,
-                    size: 18,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    duration,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+              // Duration row (if available)
+              if (duration != null && duration.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 24, // Fixed width for icon container
+                      child: const Icon(
+                        Icons.access_time,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
                     ),
-                    softWrap: true,
-                  ),
+                    Expanded(
+                      child: Text(
+                        duration,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
