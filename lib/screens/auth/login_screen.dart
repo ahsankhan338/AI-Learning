@@ -162,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (!mounted) return;
 
                                 authProvider.login(
-                                    token: result['token'].toString());
+                                    token: result['token'].toString(),
+                                    rememberMe: rememberMe);
 
                                 // showToast(message: result['message']);
                               } catch (error) {
