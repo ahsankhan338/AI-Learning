@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:aieducator/api/categories_api.dart';
 import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/models/category_modal.dart';
-import 'package:aieducator/utility/data.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print("fetched:");
     try {
       final fetchedCategories =
-          await CategoriesApi.get3Categories(token: "token!");
+          await CategoriesApi.getCategories(token: "token!");
       print("fetched: $fetchedCategories");
       setState(() {
         _categories = fetchedCategories;
@@ -58,88 +57,84 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SearchBar(
-                hintText: "Search",
-                padding: WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(horizontal: 20)),
-                trailing: [Icon(Icons.search)],
-              ),
-              SizedBox(
-                height: constHeight,
-              ),
+              // const SearchBar(
+              //   hintText: "Search",
+              //   padding: WidgetStatePropertyAll(
+              //       EdgeInsets.symmetric(horizontal: 20)),
+              //   trailing: [Icon(Icons.search)],
+              // ),
+              // SizedBox(
+              //   height: constHeight,
+              // ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Recommended",
+                    "Availaible Subjects",
                     style: AppTextStyles.bodyTitle(),
                   ),
-                  TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "See All",
-                        style: AppTextStyles.textButtonStyle(),
-                      ))
+                  // TextButton(
+                  //     onPressed: () {},
+                  //     child: Text(
+                  //       "See All",
+                  //       style: AppTextStyles.textButtonStyle(),
+                  //     ))
                 ],
               ),
               SizedBox(
                 height: constHeight,
               ),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: _categories.map((item) {
-                    final String imageURL = item.imageUrl
-                        .toString()
-                        .replaceFirst(
-                            "http://localhost:3001", "http://10.0.2.2:3001");
+              GridView.count(
+                crossAxisCount: 3, // Show 3 items per row
+                shrinkWrap: true,
+                physics:
+                    const NeverScrollableScrollPhysics(), // Prevent internal scroll
+                
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 10,
+                children: _categories.map((item) {
+                  final String imageURL = item.imageUrl.toString().replaceFirst(
+                      "http://localhost:3001", "http://10.0.2.2:3001");
+                  const double size = 62.0;
 
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        child: InkWell(
-                          onTap: () {
-                            context.goNamed(
-                              'courseDetail',
-                              pathParameters: {
-                                'name': item.title,
-                                'categoryId': item.uuid.toString()
-                              },
-                            );
-                          },
-                          child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.start, // Distribute space
-                            children: [
-                              // Text(item.toString()),
-                              Expanded(
-                                flex: 2,
-                                child: Image.network(
-                                  imageURL,
-                                  height: 95,
-                                  width: 95,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              Flexible(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(item.title,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2, // Prevent excessive height
-                                      overflow: TextOverflow.ellipsis,
-                                      style:
-                                          AppTextStyles.textLabelSmallStyle()),
-                                ),
-                              ),
-                            ],
+                  return InkWell(
+                    onTap: () {
+                      context.goNamed(
+                        'courseDetail',
+                        pathParameters: {
+                          'name': item.title,
+                          'categoryId': item.uuid.toString(),
+                        },
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: size,
+                          width: size,
+                          child: Image.network(
+                            imageURL,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            item.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.textLabelSmallStyle(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
+
               // SizedBox(
               //   height: constHeight * 3,
               // ),

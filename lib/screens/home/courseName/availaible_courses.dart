@@ -269,6 +269,21 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
     String? rating,
     String? duration,
   }) {
+    Future<void> _launchURL() async {
+      if (link == null || link.isEmpty) return;
+      
+      final Uri url = Uri.parse(link);
+      try {
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          print('Could not launch $url');
+        }
+      } catch (e) {
+        print('Error launching URL: $e');
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -276,21 +291,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () async {
-          if (link == null || link.isEmpty) return;
-
-          final Uri url = Uri.parse(link);
-          print(url);
-          try {
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            } else {
-              print('Could not launch $url');
-            }
-          } catch (e) {
-            print('Error launching URL: $e');
-          }
-        },
+        onTap: _launchURL,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -395,9 +396,9 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 24, // Fixed width for icon container
-                      child: const Icon(
+                      child: Icon(
                         Icons.access_time,
                         color: Colors.white70,
                         size: 18,

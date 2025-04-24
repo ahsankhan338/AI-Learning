@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class CategoriesApi {
   static const String _apiBaseURL = 'http://10.0.2.2:3001';
 
-  static Future<List<Category>> get3Categories({required String token}) async {
+  static Future<List<Category>> getCategories({required String token}) async {
     try {
       final response = await http.get(
         Uri.parse('$_apiBaseURL/categories/get3Categories'),
