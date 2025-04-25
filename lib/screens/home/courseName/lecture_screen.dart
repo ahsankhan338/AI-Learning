@@ -1,5 +1,7 @@
 import 'package:aieducator/api/ai_model_api.dart';
+import 'package:aieducator/components/spinner.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 
 class LectureScreen extends StatefulWidget {
@@ -32,7 +34,7 @@ class _LectureScreenState extends State<LectureScreen> {
     try {
       final prompt =
           "Give me a list of only 7 quiz titles with completion status in pure JSON format for the course '${widget.courseName}'. "
-          "The format should be: [{\"title\": \"Quiz 1\", \"completed\": false}, ...] with no explanation.";
+          "The format should be: [{\"title\": \"Quiz 1 [Actual Title]\", \"completed\": false,}, ...] with no explanation. All completed Fields should be false";
 
       final response = await aiApi.getAIResponse(prompt);
 
@@ -69,7 +71,7 @@ class _LectureScreenState extends State<LectureScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
       child: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: SpinLoader())
           : error != null
               ? Center(
                   child: Text(
@@ -85,6 +87,10 @@ class _LectureScreenState extends State<LectureScreen> {
                     return InkWell(
                       onTap: () {
                         print(steps[index]["title"]);
+                        context.push('/home/course/${widget.courseName}/${widget.categoryId}/lectures/mcq', extra: {
+                          'quizTitle': steps[index]["title"],
+                          'categoryId': widget.categoryId,
+                        });
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +118,7 @@ class _LectureScreenState extends State<LectureScreen> {
                               steps[index]["title"],
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 24,
+                                fontSize: 22,
                               ),
                             ),
                           ),

@@ -34,6 +34,16 @@ class BottomNavigationBarScreen extends StatelessWidget {
           return "Nearby Institute";
         } else if (location.endsWith('/availableCourses')) {
           return "Available Courses";
+        } else if (location.endsWith('/lectures/mcq')) {
+          // Get the quiz title from extra data if available
+          final GoRouterState state = GoRouterState.of(context);
+          if (state.extra != null && state.extra is Map<String, dynamic>) {
+            final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
+            if (extra.containsKey('quizTitle')) {
+              return extra['quizTitle'] as String;
+            }
+          }
+          return "Quiz";
         }
         return courseName;
       } else if (location.startsWith('/eBook/')) {
@@ -50,7 +60,7 @@ class BottomNavigationBarScreen extends StatelessWidget {
       decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80.0),
+          preferredSize: const Size.fromHeight(100.0),
           child: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -94,9 +104,13 @@ class BottomNavigationBarScreen extends StatelessWidget {
                             padding: EdgeInsets.zero,
                           ),
                         const SizedBox(width: 8),
-                        Text(
-                          getTitle(),
-                          style: AppTextStyles.largeTitle(),
+                        Expanded(
+                          child: Text(
+                            getTitle(),
+                            style: AppTextStyles.largeTitle(),
+                            maxLines: 2,
+                            overflow: TextOverflow.visible,
+                          ),
                         ),
                       ],
                     ),

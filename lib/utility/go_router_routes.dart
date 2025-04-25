@@ -1,5 +1,3 @@
-
-
 class AppRoute {
   final String path;
   final String name;
@@ -30,6 +28,7 @@ class AppRoutes {
   // Home Sub-routes
   static const courseDetail = AppRoute(path: '/home/course/:name', name: 'courseDetail');
   static const lectures = AppRoute(path: '/home/course/:name/lectures', name: 'lectures');
+  static const mcq = AppRoute(path: '/home/course/:name/lectures/mcq', name: 'mcq');
   static const nearbyInstitute = AppRoute(path: '/home/course/:name/nearbyInstitute', name: 'nearbyInstitute');
   static const availableCourses = AppRoute(path: '/home/course/:name/availableCourses', name: 'availableCourses');
 

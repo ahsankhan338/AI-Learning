@@ -6,6 +6,7 @@ import 'package:aieducator/screens/certificates/certificate_screen.dart';
 import 'package:aieducator/screens/ebook/e_book.dart';
 import 'package:aieducator/screens/error_screen.dart';
 import 'package:aieducator/screens/home/courseName/availaible_courses.dart';
+import 'package:aieducator/screens/home/courseName/mcq_screen.dart';
 import 'package:aieducator/screens/home/courseName/nearby_institute.dart';
 import 'package:aieducator/screens/home/course_name.dart';
 import 'package:aieducator/screens/home/home_screen.dart';
@@ -89,6 +90,19 @@ class AppRouter {
                       courseName: state.pathParameters['name'] ?? '',
                       categoryId: state.pathParameters['categoryId'] ?? '',
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'mcq',
+                        name: 'mcq',
+                        builder: (_, state) {
+                          final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
+                          return MCQScreen(
+                            quizTitle: extra['quizTitle'] as String,
+                            categoryId: extra['categoryId'] as String,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'nearbyInstitute',
