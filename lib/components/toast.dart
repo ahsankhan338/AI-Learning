@@ -7,7 +7,7 @@ void showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      backgroundColor: backgroundColor ?? Colors.black,
+      backgroundColor: Colors.black,
       textColor: textColor ?? Colors.grey,
       fontSize: 16.0);
 }

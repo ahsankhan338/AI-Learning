@@ -6,6 +6,7 @@ import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -229,7 +230,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              context.goNamed('register');
+                            },
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.blueAccent,
                             ),
