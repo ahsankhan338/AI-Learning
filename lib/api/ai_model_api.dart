@@ -9,7 +9,7 @@ class AiModelApi {
       url,
       headers: {
         'Authorization':
-            'Bearer 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',
+            'Bearer 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',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({

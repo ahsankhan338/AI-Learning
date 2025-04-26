@@ -40,6 +40,44 @@ class Authentication {
       throw Exception(e);
     }
   }
+
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String username,
+    required String password,
+    required String dateOfBirth,
+  }) async {
+    try {
+      final uri = Uri.parse('$_apiBaseURL/authentication/register');
+      final Response response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email,
+              'displayName': username,
+              'password': password,
+              'dateOfBirth': dateOfBirth,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return {
+          'message': responseBody['message'],
+          'token': responseBody['accessToken']
+        };
+      }
+
+      throw Exception('Registration Failed: ${responseBody['message']}');
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
 }
 
 class AuthException implements Exception {

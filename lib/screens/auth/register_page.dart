@@ -1,11 +1,11 @@
-
+import 'package:aieducator/api/auth_api.dart';
 import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/constants/constants.dart';
-
+import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,6 +19,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
@@ -96,6 +97,45 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.email, color: Colors.white),
                         hintText: 'Email',
+                        hintStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.white70),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.white),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.red),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.red),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Username field
+                    TextFormField(
+                      controller: usernameController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a username';
+                        }
+                        if (value.length < 3) {
+                          return 'Username must be at least 3 characters';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.person, color: Colors.white),
+                        hintText: 'Username',
                         hintStyle: const TextStyle(color: Colors.white70),
                         filled: true,
                         fillColor: Colors.transparent,
@@ -258,32 +298,26 @@ class _RegisterPageState extends State<RegisterPage> {
                                 });
 
                                 try {
-                                  // Registration logic would go here
-                                  // Example:
-                                  // final Authentication authentication = Authentication();
-                                  // final result = await authentication.register(
-                                  //   email: emailController.text,
-                                  //   password: passwordController.text,
-                                  //   dateOfBirth: dobController.text,
-                                  // );
-                                  
-                                  await Future.delayed(const Duration(seconds: 2)); // Simulating API call
+                                  // Use the AuthProvider to handle registration
+                                  await Provider.of<AuthProvider>(context, listen: false)
+                                      .register(
+                                        email: emailController.text,
+                                        username: usernameController.text,
+                                        password: passwordController.text,
+                                        dateOfBirth: dobController.text,
+                                      );
                                   
                                   if (!mounted) return;
                                   
-                                  showToast(
-                                    message: 'Registration successful!',
-                                    backgroundColor: Colors.green,
-                                  );
-                                  
-                                  // Navigate to login page or home page
-                                  context.goNamed('login');
+                                  // Navigate to home page (AuthProvider already shows toast)
+                                  context.goNamed('home');
                                 } catch (error) {
-                                  final errorMessage = error.toString().replaceAll('Exception: ', '');
-                                  showToast(
-                                    message: errorMessage,
-                                    backgroundColor: Colors.red,
-                                  );
+                                  // AuthProvider already handles toast for errors
+                                  if (mounted) {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  }
                                 } finally {
                                   if (mounted) {
                                     setState(() {

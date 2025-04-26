@@ -1,3 +1,4 @@
+import 'package:aieducator/api/auth_api.dart';
 import 'package:aieducator/api/user_api.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/models/user_modal.dart';
@@ -62,6 +63,33 @@ class AuthProvider extends ChangeNotifier {
       logout();
     } finally {
       notifyListeners();
+    }
+  }
+  
+  Future<void> register({
+    required String email,
+    required String username,
+    required String password,
+    required String dateOfBirth,
+  }) async {
+    try {
+      final Authentication auth = Authentication();
+      final result = await auth.register(
+        email: email,
+        username: username,
+        password: password,
+        dateOfBirth: dateOfBirth,
+      );
+      
+      final token = result['token'];
+      
+      // After successful registration, log the user in
+      await login(token: token, rememberMe: true);
+      
+      showToast(message: "Registered Successfully");
+    } catch (e) {
+      showToast(message: "Registration failed: ${e.toString()}", backgroundColor: Colors.red);
+      rethrow; // Rethrow so the UI can handle it
     }
   }
 

@@ -24,27 +24,40 @@ class _MCQScreenState extends State<MCQScreen> {
   bool isLoading = true;
   String? error;
   bool showingResults = false;
+  bool showingLecture = true;
+  String lecture = "";
   final AiModelApi aiApi = AiModelApi();
 
   @override
   void initState() {
     super.initState();
-    fetchQuestions();
+    fetchLectureAndQuestions();
   }
 
-  Future<void> fetchQuestions() async {
+  Future<void> fetchLectureAndQuestions() async {
     try {
-      final prompt =
-          "Generate 5 multiple choice questions for a quiz titled '${widget.quizTitle}'. "
+      // First, fetch the lecture based on the title
+      final lecturePrompt = "Generate a lenghty and informative lecture about '${widget.quizTitle}'. Keep it concise but educational.";
+      
+      final lectureResponse = await aiApi.getAIResponse(lecturePrompt);
+      setState(() {
+        lecture = lectureResponse.trim();
+        isLoading = true; // Keep loading while we fetch questions
+      });
+      
+      // Then, generate questions based on the lecture content
+      final questionsPrompt =
+          "Based on the following lecture about ${widget.quizTitle}:\n\n$lecture\n\n"
+          "Generate 10 multiple choice questions that test understanding of key concepts from this lecture. "
           "Each question should have 4 options with one correct answer. "
           "Format as JSON: [{\"question\": \"Question text\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 0}, ...] "
           "with no explanation. Give pure JSON only.";
 
-      final response = await aiApi.getAIResponse(prompt);
+      final questionsResponse = await aiApi.getAIResponse(questionsPrompt);
 
       // Extract JSON array using regex
-      final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(response);
-
+      final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(questionsResponse);
+      
       if (jsonMatch != null) {
         final jsonString = jsonMatch.group(0)!;
         final decoded = json.decode(jsonString);
@@ -65,7 +78,7 @@ class _MCQScreenState extends State<MCQScreen> {
       print("AI API error: $e");
       setState(() {
         isLoading = false;
-        error = "Failed to fetch questions. Please try again later.";
+        error = "Failed to fetch lecture and questions. Please try again later.";
       });
     }
   }
@@ -98,6 +111,12 @@ class _MCQScreenState extends State<MCQScreen> {
     });
   }
 
+  void startQuiz() {
+    setState(() {
+      showingLecture = false;
+    });
+  }
+
   int calculateScore() {
     int correctAnswers = 0;
     selectedAnswers.forEach((questionIndex, selectedOptionIndex) {
@@ -106,6 +125,58 @@ class _MCQScreenState extends State<MCQScreen> {
       }
     });
     return correctAnswers;
+  }
+
+  Widget buildLectureScreen() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.quizTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Lecture",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              lecture,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Center(
+              child: ElevatedButton(
+                onPressed: startQuiz,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+                child: const Text("Start Quiz", style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget buildResultsScreen() {
@@ -205,108 +276,110 @@ class _MCQScreenState extends State<MCQScreen> {
                           style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                       )
-                    : showingResults
-                        ? buildResultsScreen()
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              LinearProgressIndicator(
-                                value: (currentQuestionIndex + 1) / questions.length,
-                                backgroundColor: Colors.grey[800],
-                                valueColor:
-                                    const AlwaysStoppedAnimation<Color>(Colors.blue),
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                "Question ${currentQuestionIndex + 1} of ${questions.length}",
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                questions[currentQuestionIndex]["question"],
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 24),
-                              Expanded(
-                                child: ListView.builder(
-                                  itemCount: questions[currentQuestionIndex]
-                                          ["options"]
-                                      .length,
-                                  itemBuilder: (context, index) {
-                                    final bool isSelected =
-                                        selectedAnswers[currentQuestionIndex] ==
-                                            index;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
-                                      child: InkWell(
-                                        onTap: () => selectAnswer(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? Colors.blue
-                                                : Colors.grey[850],
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            questions[currentQuestionIndex]["options"]
-                                                [index],
-                                            style: TextStyle(
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : Colors.grey[300],
-                                              fontSize: 18,
+                    : showingLecture
+                        ? buildLectureScreen()
+                        : showingResults
+                            ? buildResultsScreen()
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  LinearProgressIndicator(
+                                    value: (currentQuestionIndex + 1) / questions.length,
+                                    backgroundColor: Colors.grey[800],
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(Colors.blue),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    "Question ${currentQuestionIndex + 1} of ${questions.length}",
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    questions[currentQuestionIndex]["question"],
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: questions[currentQuestionIndex]
+                                              ["options"]
+                                          .length,
+                                      itemBuilder: (context, index) {
+                                        final bool isSelected =
+                                            selectedAnswers[currentQuestionIndex] ==
+                                                index;
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 12),
+                                          child: InkWell(
+                                            onTap: () => selectAnswer(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? Colors.blue
+                                                    : Colors.grey[850],
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: Text(
+                                                questions[currentQuestionIndex]["options"]
+                                                    [index],
+                                                style: TextStyle(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.grey[300],
+                                                  fontSize: 18,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: currentQuestionIndex > 0
-                                        ? previousQuestion
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey[800],
-                                      foregroundColor: Colors.white,
+                                        );
+                                      },
                                     ),
-                                    child: const Text("Previous"),
                                   ),
-                                  if (currentQuestionIndex == questions.length - 1)
-                                    ElevatedButton(
-                                      onPressed: showResults,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                        foregroundColor: Colors.white,
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: currentQuestionIndex > 0
+                                            ? previousQuestion
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey[800],
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        child: const Text("Previous"),
                                       ),
-                                      child: const Text("Show Results"),
-                                    )
-                                  else
-                                    ElevatedButton(
-                                      onPressed:
-                                          currentQuestionIndex < questions.length - 1
-                                              ? nextQuestion
-                                              : null,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      child: const Text("Next"),
-                                    ),
+                                      if (currentQuestionIndex == questions.length - 1)
+                                        ElevatedButton(
+                                          onPressed: showResults,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: const Text("Show Results"),
+                                        )
+                                      else
+                                        ElevatedButton(
+                                          onPressed:
+                                              currentQuestionIndex < questions.length - 1
+                                                  ? nextQuestion
+                                                  : null,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: const Text("Next"),
+                                        ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
       ),
     );
   }
