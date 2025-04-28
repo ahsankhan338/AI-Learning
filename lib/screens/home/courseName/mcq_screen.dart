@@ -28,6 +28,7 @@ class MCQScreen extends StatefulWidget {
 }
 
 class _MCQScreenState extends State<MCQScreen> {
+  bool _isDisposed = false;
   List<Map<String, dynamic>> questions = [];
   int currentQuestionIndex = 0;
   Map<int, int> selectedAnswers = {};
@@ -43,6 +44,12 @@ class _MCQScreenState extends State<MCQScreen> {
   void initState() {
     super.initState();
     fetchTokenAndData();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   Future<void> fetchTokenAndData() async {
@@ -64,17 +71,18 @@ class _MCQScreenState extends State<MCQScreen> {
 
   Future<void> fetchLectureAndQuestions() async {
     try {
-      // First, fetch the lecture based on the title
       final lecturePrompt =
           "Generate a lenghty and informative lecture about '${widget.quizTitle}'. Keep it concise but educational.";
 
       final lectureResponse = await aiApi.getAIResponse(lecturePrompt);
-      setState(() {
-        lecture = lectureResponse.trim();
-        isLoading = true; // Keep loading while we fetch questions
-      });
 
-      // Then, generate questions based on the lecture content
+      if (!_isDisposed) {
+        setState(() {
+          lecture = lectureResponse.trim();
+          isLoading = true; // Still fetching questions
+        });
+      }
+
       final questionsPrompt =
           "Based on the following lecture about ${widget.quizTitle}:\n\n$lecture\n\n"
           "Generate 5 multiple choice questions that test understanding of key concepts from this lecture. "
@@ -84,7 +92,6 @@ class _MCQScreenState extends State<MCQScreen> {
 
       final questionsResponse = await aiApi.getAIResponse(questionsPrompt);
 
-      // Extract JSON array using regex
       final jsonMatch =
           RegExp(r'\[.*\]', dotAll: true).firstMatch(questionsResponse);
 
@@ -93,11 +100,13 @@ class _MCQScreenState extends State<MCQScreen> {
         final decoded = json.decode(jsonString);
 
         if (decoded is List && decoded.isNotEmpty) {
-          setState(() {
-            questions = List<Map<String, dynamic>>.from(decoded);
-            isLoading = false;
-            error = null;
-          });
+          if (!_isDisposed) {
+            setState(() {
+              questions = List<Map<String, dynamic>>.from(decoded);
+              isLoading = false;
+              error = null;
+            });
+          }
         } else {
           throw Exception("Decoded data is not a valid non-empty list.");
         }
@@ -106,11 +115,13 @@ class _MCQScreenState extends State<MCQScreen> {
       }
     } catch (e) {
       print("AI API error: $e");
-      setState(() {
-        isLoading = false;
-        error =
-            "Failed to fetch lecture and questions. Please try again later.";
-      });
+      if (!_isDisposed) {
+        setState(() {
+          isLoading = false;
+          error =
+              "Failed to fetch lecture and questions. Please try again later.";
+        });
+      }
     }
   }
 

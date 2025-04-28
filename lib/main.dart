@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
 
   final authProvider = AuthProvider();
   final appRouter = AppRouter(authProvider);
