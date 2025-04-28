@@ -1,16 +1,26 @@
+import 'package:aieducator/api/quiz_api.dart';
+import 'package:aieducator/components/toast.dart';
+import 'package:aieducator/models/quiz_model.dart';
 import 'package:flutter/material.dart';
 import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/api/ai_model_api.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MCQScreen extends StatefulWidget {
   final String quizTitle;
   final String categoryId;
+  final int quizIndex;
+  final List<QuizTitle> quizTitles;
 
   const MCQScreen({
     super.key,
     required this.quizTitle,
     required this.categoryId,
+    required this.quizIndex,
+    required this.quizTitles,
   });
 
   @override
@@ -26,29 +36,48 @@ class _MCQScreenState extends State<MCQScreen> {
   bool showingResults = false;
   bool showingLecture = true;
   String lecture = "";
+  String? token;
   final AiModelApi aiApi = AiModelApi();
 
   @override
   void initState() {
     super.initState();
-    fetchLectureAndQuestions();
+    fetchTokenAndData();
+  }
+
+  Future<void> fetchTokenAndData() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('auth_token');
+
+    if (token == null) {
+      // Token missing -> show error
+      setState(() {
+        error = "Authentication error. Please log in again.";
+        isLoading = false;
+      });
+      return;
+    }
+
+    // Now token is available
+    fetchLectureAndQuestions(); // fetch lecture and questions normally
   }
 
   Future<void> fetchLectureAndQuestions() async {
     try {
       // First, fetch the lecture based on the title
-      final lecturePrompt = "Generate a lenghty and informative lecture about '${widget.quizTitle}'. Keep it concise but educational.";
-      
+      final lecturePrompt =
+          "Generate a lenghty and informative lecture about '${widget.quizTitle}'. Keep it concise but educational.";
+
       final lectureResponse = await aiApi.getAIResponse(lecturePrompt);
       setState(() {
         lecture = lectureResponse.trim();
         isLoading = true; // Keep loading while we fetch questions
       });
-      
+
       // Then, generate questions based on the lecture content
       final questionsPrompt =
           "Based on the following lecture about ${widget.quizTitle}:\n\n$lecture\n\n"
-          "Generate 10 multiple choice questions that test understanding of key concepts from this lecture. "
+          "Generate 5 multiple choice questions that test understanding of key concepts from this lecture. "
           "Each question should have 4 options with one correct answer. "
           "Format as JSON: [{\"question\": \"Question text\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 0}, ...] "
           "with no explanation. Give pure JSON only.";
@@ -56,8 +85,9 @@ class _MCQScreenState extends State<MCQScreen> {
       final questionsResponse = await aiApi.getAIResponse(questionsPrompt);
 
       // Extract JSON array using regex
-      final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(questionsResponse);
-      
+      final jsonMatch =
+          RegExp(r'\[.*\]', dotAll: true).firstMatch(questionsResponse);
+
       if (jsonMatch != null) {
         final jsonString = jsonMatch.group(0)!;
         final decoded = json.decode(jsonString);
@@ -78,7 +108,8 @@ class _MCQScreenState extends State<MCQScreen> {
       print("AI API error: $e");
       setState(() {
         isLoading = false;
-        error = "Failed to fetch lecture and questions. Please try again later.";
+        error =
+            "Failed to fetch lecture and questions. Please try again later.";
       });
     }
   }
@@ -106,6 +137,13 @@ class _MCQScreenState extends State<MCQScreen> {
   }
 
   void showResults() {
+    if (selectedAnswers.length < questions.length) {
+      showToast(
+          message: "Please answer all questions before submitting.",
+          backgroundColor: Colors.black,
+          textColor: Colors.red);
+      return;
+    }
     setState(() {
       showingResults = true;
     });
@@ -125,6 +163,36 @@ class _MCQScreenState extends State<MCQScreen> {
       }
     });
     return correctAnswers;
+  }
+
+  Future<void> unlockNextQuiz() async {
+    try {
+      final nextQuizIndex = widget.quizIndex + 1;
+
+      if (nextQuizIndex < widget.quizTitles.length) {
+        final nextQuiz = widget.quizTitles[nextQuizIndex];
+        final currentQuiz = widget.quizTitles[widget.quizIndex];
+        if (nextQuiz.status != 'unlocked') {
+          await QuizApi.updateQuizStatus(
+            token: token!,
+            categoryId: widget.categoryId,
+            quizTitle: nextQuiz.title,
+            previousTitle: currentQuiz.title,
+            previousTitleStatus: "passed",
+            status: "unlocked",
+          );
+
+          showToast(
+            message: "🎉 Next Quiz Unlocked!",
+            backgroundColor: Colors.green,
+          );
+        } else {
+          print("Next quiz is already unlocked. No action needed.");
+        }
+      }
+    } catch (e) {
+      print("Failed to unlock next quiz: $e");
+    }
   }
 
   Widget buildLectureScreen() {
@@ -168,7 +236,8 @@ class _MCQScreenState extends State<MCQScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
                 child: const Text("Start Quiz", style: TextStyle(fontSize: 16)),
               ),
@@ -183,7 +252,7 @@ class _MCQScreenState extends State<MCQScreen> {
     final score = calculateScore();
     final totalQuestions = questions.length;
     final percentage = (score / totalQuestions) * 100;
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -227,26 +296,59 @@ class _MCQScreenState extends State<MCQScreen> {
           Text(
             "${percentage.toStringAsFixed(0)}%",
             style: TextStyle(
-              color: percentage >= 70 ? Colors.green : percentage >= 50 ? Colors.amber : Colors.red,
+              color: percentage >= 70
+                  ? Colors.green
+                  : percentage >= 50
+                      ? Colors.amber
+                      : Colors.red,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                showingResults = false;
-                currentQuestionIndex = 0;
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showingResults = false;
+                  currentQuestionIndex = 0;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: const Text("Review Questions",
+                  style: TextStyle(fontSize: 16)),
             ),
-            child: const Text("Review Questions", style: TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                if (percentage >= 60) {
+                  await unlockNextQuiz();
+                  context.pop(
+                      true); // 👈 Pass true to tell LectureScreen to refresh
+                } else {
+                  showToast(message: "You did not pass the quiz");
+                  context.pop(
+                      false); // 👈 (Optional) If failed, you can pass false
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: const Text("Submit", style: TextStyle(fontSize: 16)),
+            ),
           ),
         ],
       ),
@@ -284,10 +386,12 @@ class _MCQScreenState extends State<MCQScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   LinearProgressIndicator(
-                                    value: (currentQuestionIndex + 1) / questions.length,
+                                    value: (currentQuestionIndex + 1) /
+                                        questions.length,
                                     backgroundColor: Colors.grey[800],
                                     valueColor:
-                                        const AlwaysStoppedAnimation<Color>(Colors.blue),
+                                        const AlwaysStoppedAnimation<Color>(
+                                            Colors.blue),
                                   ),
                                   const SizedBox(height: 20),
                                   Text(
@@ -310,11 +414,12 @@ class _MCQScreenState extends State<MCQScreen> {
                                               ["options"]
                                           .length,
                                       itemBuilder: (context, index) {
-                                        final bool isSelected =
-                                            selectedAnswers[currentQuestionIndex] ==
-                                                index;
+                                        final bool isSelected = selectedAnswers[
+                                                currentQuestionIndex] ==
+                                            index;
                                         return Padding(
-                                          padding: const EdgeInsets.only(bottom: 12),
+                                          padding:
+                                              const EdgeInsets.only(bottom: 12),
                                           child: InkWell(
                                             onTap: () => selectAnswer(index),
                                             child: Container(
@@ -323,11 +428,12 @@ class _MCQScreenState extends State<MCQScreen> {
                                                 color: isSelected
                                                     ? Colors.blue
                                                     : Colors.grey[850],
-                                                borderRadius: BorderRadius.circular(10),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                               child: Text(
-                                                questions[currentQuestionIndex]["options"]
-                                                    [index],
+                                                questions[currentQuestionIndex]
+                                                    ["options"][index],
                                                 style: TextStyle(
                                                   color: isSelected
                                                       ? Colors.white
@@ -343,7 +449,8 @@ class _MCQScreenState extends State<MCQScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton(
                                         onPressed: currentQuestionIndex > 0
@@ -355,7 +462,8 @@ class _MCQScreenState extends State<MCQScreen> {
                                         ),
                                         child: const Text("Previous"),
                                       ),
-                                      if (currentQuestionIndex == questions.length - 1)
+                                      if (currentQuestionIndex ==
+                                          questions.length - 1)
                                         ElevatedButton(
                                           onPressed: showResults,
                                           style: ElevatedButton.styleFrom(
@@ -366,10 +474,10 @@ class _MCQScreenState extends State<MCQScreen> {
                                         )
                                       else
                                         ElevatedButton(
-                                          onPressed:
-                                              currentQuestionIndex < questions.length - 1
-                                                  ? nextQuestion
-                                                  : null,
+                                          onPressed: currentQuestionIndex <
+                                                  questions.length - 1
+                                              ? nextQuestion
+                                              : null,
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.blue,
                                             foregroundColor: Colors.white,

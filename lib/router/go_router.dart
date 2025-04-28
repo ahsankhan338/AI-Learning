@@ -1,4 +1,5 @@
 import 'package:aieducator/components/bottom_navigation_bar.dart';
+import 'package:aieducator/models/quiz_model.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/screens/auth/login_screen.dart';
 import 'package:aieducator/screens/auth/register_page.dart';
@@ -95,10 +96,13 @@ class AppRouter {
                         path: 'mcq',
                         name: 'mcq',
                         builder: (_, state) {
-                          final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
+                          final Map<String, dynamic> extra =
+                              state.extra as Map<String, dynamic>;
                           return MCQScreen(
                             quizTitle: extra['quizTitle'] as String,
                             categoryId: extra['categoryId'] as String,
+                            quizIndex: extra['quizIndex'] as int,
+                            quizTitles: extra['quizTitles'] as List<QuizTitle>,
                           );
                         },
                       ),
@@ -109,14 +113,16 @@ class AppRouter {
                     name: 'nearbyInstitute',
                     builder: (_, state) => NearbyInstituteScreen(
                       courseName: state.pathParameters['name'] ?? 'Unknown',
-                      categoryId: state.pathParameters['categoryId'] ?? 'Unknown ID',
+                      categoryId:
+                          state.pathParameters['categoryId'] ?? 'Unknown ID',
                     ),
                   ),
                   GoRoute(
                     path: 'availableCourses',
                     name: 'availableCourses',
                     builder: (_, state) => AvailaibleCoursesScreen(
-                      categoryId: state.pathParameters['categoryId'] ?? 'Unknown ID',
+                      categoryId:
+                          state.pathParameters['categoryId'] ?? 'Unknown ID',
                     ),
                   ),
                 ],
