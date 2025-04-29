@@ -1,21 +1,22 @@
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class CourseApi {
-  static const String _apiBaseURL = 'http://10.0.2.2:3001/course/findCourses';
+  static final String? _apiBaseURL = dotenv.env['API_BASE_URL'];
 
   static Future<Map<String, dynamic>> fetchCourses(int page, int limit,
       {String? categoryId}) async {
-
-    print("Courses: $categoryId");    
+    print("Courses: $categoryId");
     final Map<String, String> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
       if (categoryId != null) 'categoryId': categoryId.toString(),
     };
 
-    final uri = Uri.parse(_apiBaseURL).replace(queryParameters: queryParams);
+    final uri = Uri.parse('$_apiBaseURL/course/findCourses')
+        .replace(queryParameters: queryParams);
     final response = await http.get(uri);
 
     print("Courses: $response");

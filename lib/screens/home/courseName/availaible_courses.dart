@@ -1,4 +1,5 @@
 import 'package:aieducator/api/course_api.dart';
+import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/models/course_model.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -194,7 +195,7 @@ class _AvailaibleCoursesScreenState extends State<AvailaibleCoursesScreen> {
   Widget _buildLoader() {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
-      child: Center(child: CircularProgressIndicator()),
+      child: Center(child: SpinLoader()),
     );
   }
 

@@ -25,7 +25,6 @@ class _CourseNameState extends State<CourseName> {
           icon: Icons.lightbulb_outline,
           text: 'Learn With AI',
           onTap: () {
-            print("Navigating to lectures with name: ${widget.name}, categoryId: ${widget.categoryId}");
             context.goNamed(
               'lectures',
               pathParameters: {

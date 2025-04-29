@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:aieducator/models/category_modal.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class CategoriesApi {
-  static const String _apiBaseURL = 'http://10.0.2.2:3001';
+  static final String? _apiBaseURL = dotenv.env['API_BASE_URL'];
 
   static Future<List<Category>> getCategories({required String token}) async {
     try {

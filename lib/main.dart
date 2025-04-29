@@ -3,9 +3,13 @@ import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:aieducator/router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
 
   final AuthProvider authProvider = AuthProvider();
   final RoutesRefreshNotifier refreshNotifier = RoutesRefreshNotifier();

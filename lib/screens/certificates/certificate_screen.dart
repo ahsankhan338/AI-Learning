@@ -1,12 +1,11 @@
-import 'dart:convert';
+import 'package:aieducator/api/certificates_api.dart';
 import 'package:aieducator/models/certificate_model.dart';
+import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CertificateScreen extends StatefulWidget {
   const CertificateScreen({super.key});
@@ -17,12 +16,16 @@ class CertificateScreen extends StatefulWidget {
 
 class _CertificateScreenState extends State<CertificateScreen> {
   late Future<List<Certificate>> _futureCertificates;
-  RoutesRefreshNotifier? _notifier; // <-- Add this
+  RoutesRefreshNotifier? _notifier;
+  late CertificatesApi _certificatesApi;
 
   @override
   void initState() {
     super.initState();
-    _futureCertificates = fetchCertificates();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _certificatesApi = CertificatesApi();
+    _futureCertificates =
+        _certificatesApi.fetchCertificates(token: authProvider.token!);
   }
 
   @override
@@ -39,31 +42,12 @@ class _CertificateScreenState extends State<CertificateScreen> {
   }
 
   void _handleRefresh() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (mounted) {
       setState(() {
-        _futureCertificates = fetchCertificates();
+        _futureCertificates = _certificatesApi.fetchCertificates(
+            token: authProvider.token!);
       });
-    }
-  }
-
-  Future<List<Certificate>> fetchCertificates() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    if (token == null) return [];
-
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:3001/certificates/my'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((e) => Certificate.fromJson(e)).toList();
-    } else {
-      print("Failed to load certificates: ${response.body}");
-      return [];
     }
   }
 

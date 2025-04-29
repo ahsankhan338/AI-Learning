@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aieducator/models/quiz_model.dart';
 
 class QuizApi {
-  static const String _apiBaseURL = 'http://10.0.2.2:3001/quizes';
+  // static const String _apiBaseURL = 'http://10.0.2.2:3001';
+  static final String? _apiBaseURL = dotenv.env['API_BASE_URL'];
 
   // Get user's quiz titles for a specific category
   static Future<List<QuizTitle>?> getQuizTitles({
@@ -13,7 +15,7 @@ class QuizApi {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$_apiBaseURL/user-quiz/$categoryId'),
+        Uri.parse('$_apiBaseURL/quizes/user-quiz/$categoryId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -43,7 +45,7 @@ class QuizApi {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_apiBaseURL/save'),
+        Uri.parse('$_apiBaseURL/quizes/save'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ class QuizApi {
   }) async {
     try {
       final response = await http.patch(
-        Uri.parse('$_apiBaseURL/status'),
+        Uri.parse('$_apiBaseURL/quizes/status'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

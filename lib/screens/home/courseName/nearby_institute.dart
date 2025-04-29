@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:aieducator/api/institutes_api.dart';
+import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/constants/constants.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +26,7 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
   late GoogleMapController mapController;
   final String apiKey = "AIzaSyCzZMy01KjsngSrrvOAcGi8HfElYxW-zT8";
 
-  final LatLng _origin = LatLng(33.681560, 72.838093);
-  final LatLng _destination = LatLng(33.7179, 73.0589);
+  static const LatLng _origin = LatLng(33.681560, 72.838093);
 
   final Set<Polyline> _polylines = {};
   final Set<Marker> _markers = {};
@@ -33,12 +34,15 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
 
   PageController _pageController = PageController();
   int _currentPage = 0;
+  bool isLoading = true;
+
+  final InstitutesApi _institutesApi = InstitutesApi();
 
   LatLng? _currentDestination;
 
   @override
   void initState() {
-    _markers.add(Marker(
+    _markers.add(const Marker(
       markerId: MarkerId('origin'),
       position: _origin,
       infoWindow: InfoWindow(title: 'Origin'),
@@ -50,36 +54,35 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
 
   Future<void> fetchInstitutes() async {
     try {
-      final response = await http.get(Uri.parse(
-          'http://10.0.2.2:3001/institutes/search?courseName=${Uri.encodeComponent(widget.courseName)}'));
+      setState(() => isLoading = true);
 
-      if (response.statusCode == 200) {
-        final List fetchInstitutes = json.decode(response.body);
-        institutes = fetchInstitutes;
+      final fetchedInstitutes = await _institutesApi.fetchInstitutes(
+        courseName: widget.courseName,
+      );
 
-        for (var uni in fetchInstitutes) {
-          _markers.add(Marker(
-            markerId: MarkerId(uni['name']),
-            position: LatLng(uni['lat'], uni['lng']),
-            infoWindow: InfoWindow(title: uni['name']),
-          ));
-        }
+      institutes = fetchedInstitutes;
 
-        // ✅ Set the default destination to first institute
-        if (institutes.isNotEmpty) {
-          _currentDestination = LatLng(
-            institutes[0]['lat'],
-            institutes[0]['lng'],
-          );
-          await _updateRoute(); // Draw the correct route immediately
-        }
+      _markers.clear(); // Clear old markers first
+      for (var uni in institutes) {
+        _markers.add(Marker(
+          markerId: MarkerId(uni['name']),
+          position: LatLng(uni['lat'], uni['lng']),
+          infoWindow: InfoWindow(title: uni['name']),
+        ));
+      }
 
-        setState(() {});
-      } else {
-        showToast(message: "Failed to fetch institutes");
+      if (institutes.isNotEmpty) {
+        _currentDestination = LatLng(
+          institutes[0]['lat'],
+          institutes[0]['lng'],
+        );
+        await _updateRoute();
+        
       }
     } catch (e) {
       showToast(message: "Error: $e");
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -87,27 +90,12 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
     mapController = controller;
   }
 
-  Future<void> _getDirections() async {
-    final String url =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${_origin.latitude},${_origin.longitude}&destination=${_destination.latitude},${_destination.longitude}&key=$apiKey";
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final points = data['routes'][0]['overview_polyline']['points'];
-      _addPolyline(points);
-    } else {
-      print('Failed to load directions');
-    }
-  }
-
   void _addPolyline(String encodedPolyline) {
     List<LatLng> polylineCoordinates = _decodePolyline(encodedPolyline);
 
     setState(() {
       _polylines.add(Polyline(
-        polylineId: PolylineId('route'),
+        polylineId: const PolylineId('route'),
         color: Colors.blue,
         width: 5,
         points: polylineCoordinates,
@@ -170,125 +158,132 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Container(
-            height: 475,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(25)),
-            width: double.infinity,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: _origin,
-                  zoom: 6.5,
-                ),
-                markers: _markers,
-                polylines: _polylines,
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-
-          SizedBox(
-            height: 170,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: institutes.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                  _currentDestination = LatLng(
-                    institutes[index]['lat'],
-                    institutes[index]['lng'],
-                  );
-                });
-                _updateRoute();
-              },
-              itemBuilder: (context, index) {
-                final university = institutes[index];
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(width: 2, color: Colors.grey),
-                    color: Color(0xFF0E2C56),
-                  ),
-                  padding: EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.courseName,
-                        style: AppTextStyles.textLabelStyle(),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        university['name'],
-                        style: AppTextStyles.textLabelStyle().copyWith(
-                            color: Colors.white70, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        "Islamabad",
-                        style: AppTextStyles.textLabelSmallStyle(),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(institutes.length, (index) {
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 4),
-                width: _currentPage == index ? 10 : 8,
-                height: _currentPage == index ? 10 : 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentPage == index ? Colors.white : Colors.grey,
-                ),
-              );
-            }),
+    return isLoading
+        ? const Center(
+            child: SpinLoader()
           )
-          // Container(
-          //   height: 120,
-          //   width: double.infinity,
-          //   decoration: BoxDecoration(
-          //       border: Border.all(width: 2, color: Colors.grey),
-          //       borderRadius: BorderRadius.circular(25)),
-          //   padding: const EdgeInsets.all(14),
-          //   child: Column(
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       Text(
-          //         widget.courseName,
-          //         style: AppTextStyles.textLabelStyle(),
-          //       ),
-          //       Text(
-          //         "Bahria University Islamabad",
-          //         style: AppTextStyles.textLabelStyle()
-          //             .copyWith(color: Colors.white70),
-          //       ),
-          //       Text(
-          //         "E-8, Islamabad",
-          //         style: AppTextStyles.textLabelSmallStyle(),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-        ],
-      ),
-    );
+        : Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                Container(
+                  height: 475,
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(25)),
+                  width: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: _origin,
+                        zoom: 6.5,
+                      ),
+                      markers: _markers,
+                      polylines: _polylines,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+
+                SizedBox(
+                  height: 170,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: institutes.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                        _currentDestination = LatLng(
+                          institutes[index]['lat'],
+                          institutes[index]['lng'],
+                        );
+                      });
+                      _updateRoute();
+                    },
+                    itemBuilder: (context, index) {
+                      final university = institutes[index];
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(width: 2, color: Colors.grey),
+                          color: const Color(0xFF0E2C56),
+                        ),
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.courseName,
+                              style: AppTextStyles.textLabelStyle(),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              university['name'],
+                              style: AppTextStyles.textLabelStyle().copyWith(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              "Islamabad",
+                              style: AppTextStyles.textLabelSmallStyle(),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(institutes.length, (index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _currentPage == index ? 10 : 8,
+                      height: _currentPage == index ? 10 : 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color:
+                            _currentPage == index ? Colors.white : Colors.grey,
+                      ),
+                    );
+                  }),
+                )
+                // Container(
+                //   height: 120,
+                //   width: double.infinity,
+                //   decoration: BoxDecoration(
+                //       border: Border.all(width: 2, color: Colors.grey),
+                //       borderRadius: BorderRadius.circular(25)),
+                //   padding: const EdgeInsets.all(14),
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     mainAxisAlignment: MainAxisAlignment.center,
+                //     children: [
+                //       Text(
+                //         widget.courseName,
+                //         style: AppTextStyles.textLabelStyle(),
+                //       ),
+                //       Text(
+                //         "Bahria University Islamabad",
+                //         style: AppTextStyles.textLabelStyle()
+                //             .copyWith(color: Colors.white70),
+                //       ),
+                //       Text(
+                //         "E-8, Islamabad",
+                //         style: AppTextStyles.textLabelSmallStyle(),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+              ],
+            ),
+          );
   }
 }

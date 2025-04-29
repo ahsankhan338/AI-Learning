@@ -3,7 +3,6 @@ import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -13,8 +12,7 @@ class ProfileSettingsScreen extends StatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: "Umair Shahid"); // default (replace later)
+  final TextEditingController _nameController = TextEditingController();
   bool _isSaving = false;
 
   Future<void> _saveName() async {
@@ -23,8 +21,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
 
       if (token == null) {
         showToast(message: "Not authenticated", backgroundColor: Colors.red);
@@ -32,15 +30,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         return;
       }
 
-      Provider.of<AuthProvider>(context, listen: false)
-          .updateUserNameLocally(_nameController.text.trim());
-
       final error =
           await UserApi.updateUserName(token, _nameController.text.trim());
 
       if (error == null) {
+        authProvider.updateUserNameLocally(_nameController.text.trim());
         showToast(message: "Name updated successfully!");
-        Navigator.pop(context); // ⬅️ Optionally go back after saving
+        Navigator.pop(context);
       } else {
         showToast(message: error, backgroundColor: Colors.red);
       }

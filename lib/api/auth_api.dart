@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:http/http.dart';
 
 class Authentication {
-  final String _apiBaseURL = 'http://10.0.2.2:3001';
+  final String? _apiBaseURL = dotenv.env['API_BASE_URL'];
 
   Future<Map<String, dynamic>> logIn({
     required String email,

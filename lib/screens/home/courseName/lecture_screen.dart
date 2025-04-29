@@ -1,15 +1,15 @@
 import 'package:aieducator/api/ai_model_api.dart';
+import 'package:aieducator/api/certificates_api.dart';
 import 'package:aieducator/api/quiz_api.dart';
 import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/models/quiz_model.dart';
+import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LectureScreen extends StatefulWidget {
   final String courseName;
@@ -33,6 +33,7 @@ class _LectureScreenState extends State<LectureScreen> {
   bool checkingCertificate = false;
   String? token;
   final AiModelApi aiApi = AiModelApi();
+  final certificatesApi = CertificatesApi();
 
   @override
   void initState() {
@@ -41,16 +42,22 @@ class _LectureScreenState extends State<LectureScreen> {
   }
 
   Future<void> _initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    token = prefs.getString('auth_token');
-    if (token == null) {
-      setState(() {
-        isLoading = false;
-      });
-      showToast(message: "Authentication error. Please login again.");
-      return;
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      token = authProvider.token;
+
+      if (token == null) {
+        setState(() => isLoading = false);
+        showToast(message: "Authentication error. Please login again.");
+        return;
+      }
+
+      await fetchQuizTitles();
+    } catch (e) {
+      setState(() => isLoading = false);
+      showToast(message: "Unexpected error initializing screen.");
+      debugPrint("Init Error: $e");
     }
-    await fetchQuizTitles();
   }
 
   bool allQuizzesPassed() {
@@ -74,17 +81,15 @@ class _LectureScreenState extends State<LectureScreen> {
         });
 
         if (allQuizzesPassed()) {
-          checkCertificateEligibility();
+          await checkCertificateEligibility();
         }
       } else {
         await generateAndSaveQuizTitles();
       }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
-      showToast(message: "Failed to load quiz data.");
+      setState(() => isLoading = false);
+      showToast(message: "Failed to load saved quizzes.");
+      debugPrint("fetchQuizTitles Error: $e");
     }
   }
 
@@ -111,9 +116,8 @@ class _LectureScreenState extends State<LectureScreen> {
         final decoded = json.decode(jsonString);
 
         if (decoded is List && decoded.isNotEmpty) {
-          final titles = (decoded as List)
-              .map((item) => QuizTitle.fromJson(item))
-              .toList();
+          final titles =
+              decoded.map((item) => QuizTitle.fromJson(item)).toList();
 
           await QuizApi.saveQuizTitles(
             token: token!,
@@ -126,91 +130,90 @@ class _LectureScreenState extends State<LectureScreen> {
             quizTitles = titles;
             isLoading = false;
           });
+
+          return;
         }
       }
+
+      showToast(message: "AI returned invalid data.");
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
       showToast(message: "Error generating quiz titles.");
+      debugPrint("generateAndSaveQuizTitles Error: $e");
     }
   }
 
   Future<void> checkCertificateEligibility() async {
-    setState(() {
-      checkingCertificate = true;
-    });
-
     try {
-      final response = await http.get(
-        Uri.parse(
-            'http://10.0.2.2:3001/certificates/eligibility/${widget.categoryId}'),
-        headers: {'Authorization': 'Bearer $token'},
+      setState(() => checkingCertificate = true);
+
+      final eligible = await certificatesApi.checkCertificateEligibility(
+        token: token!,
+        categoryId: widget.categoryId,
       );
 
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        if (mounted) {
-          setState(() {
-            hasCertificate = result['hasCertificate'] == true;
-          });
-        }
-      }
-    } catch (e) {
-      print("Certificate eligibility check failed: $e");
-    } finally {
       if (mounted) {
         setState(() {
+          hasCertificate = eligible;
           checkingCertificate = false;
         });
       }
+    } catch (e) {
+      setState(() => checkingCertificate = false);
+      showToast(message: "Failed to check certificate status.");
+      debugPrint("checkCertificateEligibility Error: $e");
     }
   }
 
   Future<void> generateCertificate() async {
-    setState(() {
-      generateQuizLoader = true;
-    });
-
     try {
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:3001/certificates/generate'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'courseName': widget.courseName,
-          'categoryId': widget.categoryId,
-        }),
+      setState(() => generateQuizLoader = true);
+
+      final success = await certificatesApi.generateCertificate(
+        token: token!,
+        courseName: widget.courseName,
+        categoryId: widget.categoryId,
       );
 
-      if (response.statusCode == 201) {
+      if (success) {
         showToast(message: "Certificate generated!");
         if (mounted) {
-          setState(() {
-            hasCertificate = true;
-          });
-
+          setState(() => hasCertificate = true);
           context.read<RoutesRefreshNotifier>().refresh();
         }
       } else {
         showToast(message: "Failed to generate certificate");
       }
     } catch (e) {
-      showToast(message: "Network error");
+      showToast(message: "Error generating certificate.");
+      debugPrint("generateCertificate Error: $e");
     } finally {
       if (mounted) {
-        setState(() {
-          generateQuizLoader = false;
-        });
+        setState(() => generateQuizLoader = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!isLoading && quizTitles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Failed to load quizzes.",
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: fetchQuizTitles,
+              child: const Text("Retry"),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
       child: isLoading
@@ -291,7 +294,7 @@ class _LectureScreenState extends State<LectureScreen> {
                           ? Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: const Color(0xFF3D3CFF),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Center(
