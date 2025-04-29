@@ -17,33 +17,39 @@ class _PreviewCertificateScreenState extends State<PreviewCertificateScreen> {
   Widget build(BuildContext context) {
     return Container(
       // light background
+      alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          children: [
-            SfPdfViewer.network(
-
-              widget.pdfUrl,
-              onDocumentLoaded: (_) {
-                setState(() => _isLoading = false);
-              },
-              onDocumentLoadFailed: (error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Failed to load certificate."),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                setState(() => _isLoading = false);
-              },
-            ),
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(color: Colors.deepPurple),
+      child: Stack(
+        children: [
+          SizedBox(
+            height: 420,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SfPdfViewer.network(
+                widget.pdfUrl,
+                canShowScrollStatus: false,
+                canShowPaginationDialog: false,
+                pageSpacing: 0,
+                onDocumentLoaded: (_) {
+                  setState(() => _isLoading = false);
+                },
+                onDocumentLoadFailed: (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Failed to load certificate."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  setState(() => _isLoading = false);
+                },
               ),
-          ],
-        ),
+            ),
+          ),
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(color: Colors.deepPurple),
+            ),
+        ],
       ),
     );
   }

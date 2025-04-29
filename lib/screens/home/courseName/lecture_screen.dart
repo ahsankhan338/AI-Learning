@@ -3,9 +3,11 @@ import 'package:aieducator/api/quiz_api.dart';
 import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/models/quiz_model.dart';
+import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -304,7 +306,12 @@ class _LectureScreenState extends State<LectureScreen> {
                           : (generateQuizLoader
                               ? const SpinLoader()
                               : ElevatedButton(
-                                  onPressed: generateCertificate,
+                                  onPressed: () async {
+                                    await generateCertificate();
+                                    Provider.of<RoutesRefreshNotifier>(context,
+                                            listen: false)
+                                        .refresh();
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
                                     padding: const EdgeInsets.symmetric(

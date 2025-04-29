@@ -1,18 +1,22 @@
 import 'package:aieducator/provider/auth_provider.dart';
+import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:aieducator/router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
 
-  final authProvider = AuthProvider();
-  final appRouter = AppRouter(authProvider);
+  final AuthProvider authProvider = AuthProvider();
+  final RoutesRefreshNotifier refreshNotifier = RoutesRefreshNotifier();
+  final appRouter = AppRouter(authProvider, refreshNotifier);
 
   runApp(
-    ChangeNotifierProvider.value(
-      value: authProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider.value(value: refreshNotifier),
+      ],
       child: EduApp(appRouter: appRouter),
     ),
   );
@@ -41,7 +45,9 @@ class EduApp extends StatelessWidget {
           titleMedium: TextStyle(color: Colors.white),
           titleSmall: TextStyle(color: Colors.white),
           //========================================================
-          labelLarge: TextStyle(color: Colors.white,),
+          labelLarge: TextStyle(
+            color: Colors.white,
+          ),
           labelMedium: TextStyle(color: Colors.white),
           labelSmall: TextStyle(color: Colors.white),
         ),

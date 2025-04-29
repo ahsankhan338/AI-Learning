@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:aieducator/models/certificate_model.dart';
+import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CertificateScreen extends StatefulWidget {
@@ -13,14 +15,24 @@ class CertificateScreen extends StatefulWidget {
   State<CertificateScreen> createState() => _CertificateScreenState();
 }
 
-class _CertificateScreenState extends State<CertificateScreen> {
+class _CertificateScreenState extends State<CertificateScreen>
+    with ChangeNotifier {
   List<Certificate> certificates = [];
   bool isLoading = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    fetchCertificates();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchCertificates();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    fetchCertificates(); // Always fetch fresh when dependencies change
   }
 
   Future<void> fetchCertificates() async {
@@ -49,31 +61,37 @@ class _CertificateScreenState extends State<CertificateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : certificates.isEmpty
-              ? const Center(
-                  child: Text("No certificates yet",
-                      style: TextStyle(color: Colors.white)),
-                )
-              : ListView.builder(
-                  itemCount: certificates.length,
-                  itemBuilder: (context, index) {
-                    final cert = certificates[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: buildNotificationCard(
-                        context: context,
-                        title: "🎓 Congratulations!",
-                        message: "You completed the course: ${cert.courseName}",
-                        certificateUrl: cert.certificateUrl,
-                        buttonText: "Preview Certificate",
-                      ),
-                    );
-                  },
-                ),
+    return Consumer<RoutesRefreshNotifier>(
+      builder: (context, notifier, child) {
+        fetchCertificates();
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : certificates.isEmpty
+                  ? const Center(
+                      child: Text("No certificates yet",
+                          style: TextStyle(color: Colors.white)),
+                    )
+                  : ListView.builder(
+                      itemCount: certificates.length,
+                      itemBuilder: (context, index) {
+                        final cert = certificates[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: buildNotificationCard(
+                            context: context,
+                            title: "🎓 Congratulations!",
+                            message:
+                                "You completed the course: ${cert.courseName}",
+                            certificateUrl: cert.certificateUrl,
+                            buttonText: "Preview Certificate",
+                          ),
+                        );
+                      },
+                    ),
+        );
+      },
     );
   }
 

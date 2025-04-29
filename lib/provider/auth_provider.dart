@@ -19,15 +19,22 @@ class AuthProvider extends ChangeNotifier {
   bool get splashComplete => _splashComplete;
   String? get token => _token;
   User? get user => _user;
+  bool _shouldRefreshCertificate = false;
+  bool get shouldRefreshCertificate => _shouldRefreshCertificate;
 
   // Constructor to check for saved credentials on startup
   AuthProvider() {
     _checkSavedCredentials();
   }
 
+  void refreshCertificates() {
+    _shouldRefreshCertificate = !_shouldRefreshCertificate; // Just toggle
+    notifyListeners(); // Tell GoRouter & screens to refresh
+  }
+
   // Check if we have saved credentials
   Future<void> _checkSavedCredentials() async {
-    final prefs =   await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final savedToken = prefs.getString(tokenKey);
     final rememberMe = prefs.getBool(rememberMeKey) ?? false;
 
@@ -65,7 +72,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   Future<void> register({
     required String email,
     required String username,
@@ -80,15 +87,17 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         dateOfBirth: dateOfBirth,
       );
-      
+
       final token = result['token'];
-      
+
       // After successful registration, log the user in
       await login(token: token, rememberMe: true);
-      
+
       showToast(message: "Registered Successfully");
     } catch (e) {
-      showToast(message: "Registration failed: ${e.toString()}", backgroundColor: Colors.red);
+      showToast(
+          message: "Registration failed: ${e.toString()}",
+          backgroundColor: Colors.red);
       rethrow; // Rethrow so the UI can handle it
     }
   }
@@ -96,7 +105,7 @@ class AuthProvider extends ChangeNotifier {
   // Save credentials to SharedPreferences
   Future<void> _saveCredentials(String token, bool rememberMe) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (rememberMe) {
       await prefs.setString(tokenKey, token);
       await prefs.setBool(rememberMeKey, true);
@@ -111,11 +120,11 @@ class AuthProvider extends ChangeNotifier {
     _isAuthenticated = false;
     _user = null;
     _token = null;
-    
+
     // Clear saved credentials
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
-    
+
     notifyListeners();
   }
 }

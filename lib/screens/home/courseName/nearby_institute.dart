@@ -43,10 +43,8 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
       position: _origin,
       infoWindow: InfoWindow(title: 'Origin'),
     ));
-    
-
-    _getDirections();
     fetchInstitutes();
+
     super.initState();
   }
 
@@ -58,12 +56,22 @@ class _NearbyInstituteScreenState extends State<NearbyInstituteScreen> {
       if (response.statusCode == 200) {
         final List fetchInstitutes = json.decode(response.body);
         institutes = fetchInstitutes;
+
         for (var uni in fetchInstitutes) {
           _markers.add(Marker(
             markerId: MarkerId(uni['name']),
             position: LatLng(uni['lat'], uni['lng']),
             infoWindow: InfoWindow(title: uni['name']),
           ));
+        }
+
+        // ✅ Set the default destination to first institute
+        if (institutes.isNotEmpty) {
+          _currentDestination = LatLng(
+            institutes[0]['lat'],
+            institutes[0]['lng'],
+          );
+          await _updateRoute(); // Draw the correct route immediately
         }
 
         setState(() {});

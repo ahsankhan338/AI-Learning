@@ -1,6 +1,7 @@
 import 'package:aieducator/components/bottom_navigation_bar.dart';
 import 'package:aieducator/models/quiz_model.dart';
 import 'package:aieducator/provider/auth_provider.dart';
+import 'package:aieducator/provider/routes_refresh_notifier.dart';
 import 'package:aieducator/screens/auth/login_screen.dart';
 import 'package:aieducator/screens/auth/register_page.dart';
 import 'package:aieducator/screens/certificates/certificate_screen.dart';
@@ -21,11 +22,12 @@ import 'package:go_router/go_router.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
+  final RoutesRefreshNotifier routesRefreshNotifier;
 
-  AppRouter(this.authProvider);
+  AppRouter(this.authProvider, this.routesRefreshNotifier);
 
   late final router = GoRouter(
-    refreshListenable: authProvider,
+    refreshListenable: Listenable.merge([authProvider, routesRefreshNotifier]),
     initialLocation: AppRoutes.splash.path,
     routes: [
       _splashRoute,
@@ -167,10 +169,16 @@ class AppRouter {
   StatefulShellBranch get _profileBranch => StatefulShellBranch(
         routes: [
           GoRoute(
-            path: AppRoutes.profile.path,
-            name: AppRoutes.profile.name,
-            builder: (_, __) => const ProfileScreen(),
-          ),
+              path: AppRoutes.profile.path,
+              name: AppRoutes.profile.name,
+              builder: (_, __) => const ProfileScreen(),
+              routes: [
+                GoRoute(
+                  path: "profileSettings",
+                  name: AppRoutes.profileSettings.name,
+                  builder: (_, __) => const ProfileScreen(),
+                ),
+              ]),
         ],
       );
 
