@@ -6,7 +6,7 @@ import 'package:http/http.dart';
 
 class Authentication {
   final String _apiBaseURL = 'http://10.0.2.2:3001';
-  // For mobile apps, use 10.0.2.2 for Android emulator or actual IP for physical devices
+
   Future<Map<String, dynamic>> logIn({
     required String email,
     required String password,

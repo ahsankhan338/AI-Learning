@@ -192,6 +192,8 @@ class _LectureScreenState extends State<LectureScreen> {
           setState(() {
             hasCertificate = true;
           });
+
+          context.read<RoutesRefreshNotifier>().refresh();
         }
       } else {
         showToast(message: "Failed to generate certificate");
@@ -306,14 +308,9 @@ class _LectureScreenState extends State<LectureScreen> {
                           : (generateQuizLoader
                               ? const SpinLoader()
                               : ElevatedButton(
-                                  onPressed: () async {
-                                    await generateCertificate();
-                                    Provider.of<RoutesRefreshNotifier>(context,
-                                            listen: false)
-                                        .refresh();
-                                  },
+                                  onPressed: generateCertificate,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: const Color(0xFF3D3CFF),
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 32, vertical: 16),
                                   ),

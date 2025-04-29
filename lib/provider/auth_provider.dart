@@ -116,6 +116,14 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+
+  void updateUserNameLocally(String newName) {
+  if (_user != null) {
+    _user = _user!.copyWith(name: newName);
+    notifyListeners();
+  }
+}
+
   Future<void> logout() async {
     _isAuthenticated = false;
     _user = null;

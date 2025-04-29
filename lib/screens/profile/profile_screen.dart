@@ -1,5 +1,7 @@
 import 'package:aieducator/provider/auth_provider.dart';
+import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -30,8 +32,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () {
-                // Navigate to Account Settings
-                print("Go to Account Settings");
+                context.pushNamed(
+                  AppRoutes.profileSettings.name,
+                );
               },
             ),
             const Divider(color: Colors.white24),

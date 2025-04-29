@@ -15,6 +15,7 @@ import 'package:aieducator/screens/home/course_name.dart';
 import 'package:aieducator/screens/home/home_screen.dart';
 import 'package:aieducator/screens/home/courseName/lecture_screen.dart';
 import 'package:aieducator/screens/profile/profile_screen.dart';
+import 'package:aieducator/screens/profile/profile_settings.dart';
 import 'package:aieducator/screens/splash_screen.dart';
 import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
@@ -176,7 +177,7 @@ class AppRouter {
                 GoRoute(
                   path: "profileSettings",
                   name: AppRoutes.profileSettings.name,
-                  builder: (_, __) => const ProfileScreen(),
+                  builder: (_, __) => const ProfileSettingsScreen(),
                 ),
               ]),
         ],

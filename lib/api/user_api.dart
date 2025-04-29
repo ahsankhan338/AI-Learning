@@ -21,11 +21,34 @@ class UserApi {
         print("User: $userData");
         return User.fromJson(userData);
       } else {
-        print("User:${response.statusCode}");
+        print("User: ${response.statusCode}");
         throw Exception('Failed to load user: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error fetching user: $e');
+    }
+  }
+
+  // ✅ New method to update user name
+  static Future<String?> updateUserName(String token, String newName) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_apiBaseURL/users/updateName'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'name': newName}),
+      );
+
+      if (response.statusCode == 200) {
+        return null; // success
+      } else {
+        final error = jsonDecode(response.body);
+        return error['message'] ?? 'Update failed';
+      }
+    } catch (e) {
+      return 'Error: $e';
     }
   }
 }
