@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:aieducator/models/certificate_model.dart';
+import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -63,9 +65,11 @@ class _CertificateScreenState extends State<CertificateScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: buildNotificationCard(
+                        context: context,
                         title: "🎓 Congratulations!",
                         message: "You completed the course: ${cert.courseName}",
-                        buttonText: "Download Certificate",
+                        certificateUrl: cert.certificateUrl,
+                        buttonText: "Preview Certificate",
                       ),
                     );
                   },
@@ -73,11 +77,12 @@ class _CertificateScreenState extends State<CertificateScreen> {
     );
   }
 
-  Widget buildNotificationCard({
-    required String title,
-    required String message,
-    required String buttonText,
-  }) {
+  Widget buildNotificationCard(
+      {required String title,
+      required String message,
+      required String buttonText,
+      required String certificateUrl,
+      required BuildContext context}) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -100,7 +105,12 @@ class _CertificateScreenState extends State<CertificateScreen> {
             alignment: Alignment.centerRight,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: implement download logic
+                context.pushNamed(
+                  AppRoutes.certificatePreview.name,
+                  queryParameters: {
+                    'url': certificateUrl,
+                  },
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3D3CFF),

@@ -4,6 +4,7 @@ import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/screens/auth/login_screen.dart';
 import 'package:aieducator/screens/auth/register_page.dart';
 import 'package:aieducator/screens/certificates/certificate_screen.dart';
+import 'package:aieducator/screens/certificates/preview_certificate.dart';
 import 'package:aieducator/screens/ebook/e_book.dart';
 import 'package:aieducator/screens/error_screen.dart';
 import 'package:aieducator/screens/home/courseName/availaible_courses.dart';
@@ -148,6 +149,17 @@ class AppRouter {
             path: AppRoutes.certificate.path,
             name: AppRoutes.certificate.name,
             builder: (_, __) => const CertificateScreen(),
+            routes: [
+              GoRoute(
+                path: 'preview',
+                name: AppRoutes.certificatePreview.name,
+                builder: (_, state) {
+                  final pdfUrl = state.uri.queryParameters['url'] ?? '';
+                  return PreviewCertificateScreen(
+                      pdfUrl: Uri.decodeFull(pdfUrl));
+                },
+              ),
+            ],
           ),
         ],
       );
