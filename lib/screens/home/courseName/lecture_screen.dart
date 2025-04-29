@@ -1,9 +1,11 @@
 import 'package:aieducator/api/ai_model_api.dart';
 import 'package:aieducator/api/quiz_api.dart';
 import 'package:aieducator/components/spinner.dart';
+import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/models/quiz_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,67 +26,82 @@ class LectureScreen extends StatefulWidget {
 class _LectureScreenState extends State<LectureScreen> {
   List<QuizTitle> quizTitles = [];
   bool isLoading = true;
-  String? error;
-  final AiModelApi aiApi = AiModelApi();
+  bool generateQuizLoader = false;
+  bool hasCertificate = false;
+  bool checkingCertificate = false;
   String? token;
+  final AiModelApi aiApi = AiModelApi();
 
   @override
   void initState() {
     super.initState();
-    _initializeToken();
+    _initialize();
   }
 
-  Future<void> _initializeToken() async {
+  Future<void> _initialize() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('auth_token');
-    fetchQuizTitles();
+    if (token == null) {
+      setState(() {
+        isLoading = false;
+      });
+      showToast(message: "Authentication error. Please login again.");
+      return;
+    }
+    await fetchQuizTitles();
+  }
+
+  bool allQuizzesPassed() {
+    return quizTitles.isNotEmpty &&
+        quizTitles.every((quiz) => quiz.status == 'passed');
   }
 
   Future<void> fetchQuizTitles() async {
-    if (token == null) {
-      setState(() {
-        error = "Authentication error. Please log in again.";
-        isLoading = false;
-      });
-      return;
-    }
-
     try {
-      // Try to get stored quiz titles from the backend first
       final savedTitles = await QuizApi.getQuizTitles(
         token: token!,
         categoryId: widget.categoryId,
       );
 
+      if (!mounted) return;
+
       if (savedTitles != null && savedTitles.isNotEmpty) {
-        // Use the stored quiz titles
         setState(() {
           quizTitles = savedTitles;
           isLoading = false;
         });
+
+        if (allQuizzesPassed()) {
+          checkCertificateEligibility();
+        }
       } else {
-        // If no stored quiz titles, generate them with AI and save to backend
         await generateAndSaveQuizTitles();
       }
     } catch (e) {
-      print("Error fetching quiz titles: $e");
+      if (!mounted) return;
       setState(() {
         isLoading = false;
-        error = "Failed to load quiz data. Please try again later.";
       });
+      showToast(message: "Failed to load quiz data.");
     }
   }
 
   Future<void> generateAndSaveQuizTitles() async {
     try {
       final prompt =
-          "Give me a list of only 7 quiz titles with status in pure JSON format for the course '${widget.courseName}'. "
-          "The format should be: [{\"title\": \"Quiz 1: [Actual Quiz Title]\", \"status\": \"unlocked\"}, ...] with no explanation. "
-          "The first quiz should have status 'unlocked', the rest should have status 'locked'";
+          "Generate exactly 7 quiz titles for the course '${widget.courseName}' in pure JSON format. "
+          "Only the first quiz should have status 'unlocked', and the remaining 6 quizzes should have status 'locked'. "
+          "The format should be like this: "
+          "[{\"title\": \"Quiz 1: [Quiz title]\", \"status\": \"unlocked\"}, "
+          "{\"title\": \"Quiz 2: [Quiz title]\", \"status\": \"locked\"}, "
+          "{\"title\": \"Quiz 3: [Quiz title]\", \"status\": \"locked\"}, "
+          "{\"title\": \"Quiz 4: [Quiz title]\", \"status\": \"locked\"}, "
+          "{\"title\": \"Quiz 5: [Quiz title]\", \"status\": \"locked\"}, "
+          "{\"title\": \"Quiz 6: [Quiz title]\", \"status\": \"locked\"}, "
+          "{\"title\": \"Quiz 7: [Quiz title]\", \"status\": \"locked\"}] "
+          "No explanation. Just pure JSON array.";
 
       final response = await aiApi.getAIResponse(prompt);
-
-      // Extract JSON array using regex
       final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(response);
 
       if (jsonMatch != null) {
@@ -92,34 +109,99 @@ class _LectureScreenState extends State<LectureScreen> {
         final decoded = json.decode(jsonString);
 
         if (decoded is List && decoded.isNotEmpty) {
-          // Convert the JSON to QuizTitle objects
           final titles = (decoded as List)
               .map((item) => QuizTitle.fromJson(item))
               .toList();
 
-          // Save the generated quiz titles to the backend
           await QuizApi.saveQuizTitles(
             token: token!,
             categoryId: widget.categoryId,
             quizTitles: titles,
           );
 
+          if (!mounted) return;
           setState(() {
             quizTitles = titles;
             isLoading = false;
           });
-        } else {
-          throw Exception("Decoded data is not a valid non-empty list.");
         }
-      } else {
-        throw Exception("No JSON array found in response.");
       }
     } catch (e) {
-      print("AI API error: $e");
+      if (!mounted) return;
       setState(() {
         isLoading = false;
-        error = "Failed to fetch quiz data. Please try again later.";
       });
+      showToast(message: "Error generating quiz titles.");
+    }
+  }
+
+  Future<void> checkCertificateEligibility() async {
+    setState(() {
+      checkingCertificate = true;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'http://10.0.2.2:3001/certificates/eligibility/${widget.categoryId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            hasCertificate = result['hasCertificate'] == true;
+          });
+        }
+      }
+    } catch (e) {
+      print("Certificate eligibility check failed: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          checkingCertificate = false;
+        });
+      }
+    }
+  }
+
+  Future<void> generateCertificate() async {
+    setState(() {
+      generateQuizLoader = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3001/certificates/generate'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'courseName': widget.courseName,
+          'categoryId': widget.categoryId,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        showToast(message: "Certificate generated!");
+        if (mounted) {
+          setState(() {
+            hasCertificate = true;
+          });
+        }
+      } else {
+        showToast(message: "Failed to generate certificate");
+      }
+    } catch (e) {
+      showToast(message: "Network error");
+    } finally {
+      if (mounted) {
+        setState(() {
+          generateQuizLoader = false;
+        });
+      }
     }
   }
 
@@ -129,80 +211,115 @@ class _LectureScreenState extends State<LectureScreen> {
       padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
       child: isLoading
           ? const Center(child: SpinLoader())
-          : error != null
-              ? Center(
-                  child: Text(
-                    error!,
-                    style: const TextStyle(color: Colors.red, fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: quizTitles.length,
-                  itemBuilder: (context, index) {
-                    bool isLast = index == quizTitles.length - 1;
-                    bool isLocked = quizTitles[index].status == 'locked';
-                    bool isPassed = quizTitles[index].status == 'passed';
-
-                    return InkWell(
-                      onTap: isLocked
-                          ? null
-                          : () async {
-                              final result = await context.push(
-                                '/home/course/${widget.courseName}/${widget.categoryId}/lectures/mcq',
-                                extra: {
-                                  'quizTitle': quizTitles[index].title,
-                                  'categoryId': widget.categoryId,
-                                  'quizIndex': index,
-                                  'quizTitles': quizTitles,
-                                },
-                              );
-
-                              // 🚀 If MCQScreen returns true, refresh quiz titles
-                              if (result == true) {
-                                fetchQuizTitles(); // 👈 Re-fetch the quiz status from server
-                              }
-                            },
-                      child: Opacity(
-                        opacity: isLocked ? 0.5 : 1.0,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              children: [
-                                Icon(
-                                  isPassed
-                                      ? Icons.check_circle
-                                      : isLocked
-                                          ? Icons.lock
-                                          : Icons.circle_outlined,
-                                  color: isPassed ? Colors.green : Colors.white,
-                                  size: 32,
-                                ),
-                                if (!isLast)
-                                  Container(
-                                    width: 2,
-                                    height: 50,
-                                    color: Colors.white,
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: quizTitles.length,
+                    itemBuilder: (context, index) {
+                      final quiz = quizTitles[index];
+                      final bool isLast = index == quizTitles.length - 1;
+                      return InkWell(
+                        onTap: quiz.status == 'locked'
+                            ? null
+                            : () async {
+                                final result = await context.push(
+                                  '/home/course/${widget.courseName}/${widget.categoryId}/lectures/mcq',
+                                  extra: {
+                                    'quizTitle': quiz.title,
+                                    'categoryId': widget.categoryId,
+                                    'quizIndex': index,
+                                    'quizTitles': quizTitles,
+                                  },
+                                );
+                                if (result == true) {
+                                  fetchQuizTitles();
+                                }
+                              },
+                        child: Opacity(
+                          opacity: quiz.status == 'locked' ? 0.5 : 1.0,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  Icon(
+                                    quiz.status == 'passed'
+                                        ? Icons.check_circle
+                                        : quiz.status == 'locked'
+                                            ? Icons.lock
+                                            : Icons.circle_outlined,
+                                    color: quiz.status == 'passed'
+                                        ? Colors.green
+                                        : Colors.white,
+                                    size: 32,
                                   ),
-                              ],
-                            ),
-                            const SizedBox(width: 30),
-                            Expanded(
-                              child: Text(
-                                quizTitles[index].title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
+                                  if (!isLast)
+                                    Container(
+                                      width: 2,
+                                      height: 50,
+                                      color: Colors.white,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(width: 30),
+                              Expanded(
+                                child: Text(
+                                  quiz.title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
+                if (allQuizzesPassed()) const SizedBox(height: 20),
+                if (allQuizzesPassed())
+                  checkingCertificate
+                      ? const SpinLoader()
+                      : hasCertificate
+                          ? Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "🎓 Certificate already generated!",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : (generateQuizLoader
+                              ? const SpinLoader()
+                              : ElevatedButton(
+                                  onPressed: generateCertificate,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 32, vertical: 16),
+                                  ),
+                                  child: const Text(
+                                    "Generate Certificate",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+              ],
+            ),
     );
   }
 }

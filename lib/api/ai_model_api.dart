@@ -9,11 +9,11 @@ class AiModelApi {
       url,
       headers: {
         'Authorization':
-            'Bearer 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',
+            'Bearer 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',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        "model": "deepseek/deepseek-r1-distill-llama-70b:free",
+        "model": "deepseek/deepseek-r1:free",
         "messages": [
           {"role": "user", "content": prompt}
         ],

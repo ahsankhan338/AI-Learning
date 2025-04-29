@@ -33,6 +33,7 @@ class _MCQScreenState extends State<MCQScreen> {
   int currentQuestionIndex = 0;
   Map<int, int> selectedAnswers = {};
   bool isLoading = true;
+  bool submitLoading = false;
   String? error;
   bool showingResults = false;
   bool showingLecture = true;
@@ -86,9 +87,11 @@ class _MCQScreenState extends State<MCQScreen> {
       final questionsPrompt =
           "Based on the following lecture about ${widget.quizTitle}:\n\n$lecture\n\n"
           "Generate 5 multiple choice questions that test understanding of key concepts from this lecture. "
-          "Each question should have 4 options with one correct answer. "
-          "Format as JSON: [{\"question\": \"Question text\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 0}, ...] "
-          "with no explanation. Give pure JSON only.";
+          "Each question should have 4 options with exactly one correct answer. "
+          "Randomize the correct option position (it should not always be the first). "
+          "Format as pure JSON: "
+          "[{\"question\": \"Question text\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 2}, ...] "
+          "Give JSON only. Do not include any explanation or markdown.";
 
       final questionsResponse = await aiApi.getAIResponse(questionsPrompt);
 
@@ -177,12 +180,27 @@ class _MCQScreenState extends State<MCQScreen> {
   }
 
   Future<void> unlockNextQuiz() async {
+    setState(() {
+      submitLoading = true;
+    });
+
     try {
       final nextQuizIndex = widget.quizIndex + 1;
+      final currentQuiz = widget.quizTitles[widget.quizIndex];
 
+      // Always mark the current quiz as passed
+      await QuizApi.updateQuizStatus(
+        token: token!,
+        categoryId: widget.categoryId,
+        quizTitle: currentQuiz.title,
+        previousTitle: currentQuiz.title,
+        previousTitleStatus: "passed",
+        status: "passed",
+      );
+
+      // Only if there's a next quiz, unlock it
       if (nextQuizIndex < widget.quizTitles.length) {
         final nextQuiz = widget.quizTitles[nextQuizIndex];
-        final currentQuiz = widget.quizTitles[widget.quizIndex];
         if (nextQuiz.status != 'unlocked') {
           await QuizApi.updateQuizStatus(
             token: token!,
@@ -197,12 +215,17 @@ class _MCQScreenState extends State<MCQScreen> {
             message: "🎉 Next Quiz Unlocked!",
             backgroundColor: Colors.green,
           );
-        } else {
-          print("Next quiz is already unlocked. No action needed.");
         }
       }
+
+      setState(() {
+        submitLoading = false;
+      });
     } catch (e) {
-      print("Failed to unlock next quiz: $e");
+      setState(() {
+        submitLoading = false;
+      });
+      print("❌ Failed to update quiz status: $e");
     }
   }
 
@@ -233,7 +256,15 @@ class _MCQScreenState extends State<MCQScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              lecture,
+              lecture
+                  .replaceAll('**', '')
+                  .replaceAll("###", '')
+                  .replaceAll('â€“', '–')
+                  .replaceAll('â€”', '—')
+                  .replaceAll('â€˜', '\'')
+                  .replaceAll('â€™', '\'')
+                  .replaceAll('â€œ', '"')
+                  .replaceAll('â€�', '"'),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -275,9 +306,9 @@ class _MCQScreenState extends State<MCQScreen> {
             size: 80,
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             "Quiz Completed!",
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -285,9 +316,9 @@ class _MCQScreenState extends State<MCQScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             "Your Score",
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white70,
               fontSize: 18,
             ),
@@ -338,29 +369,31 @@ class _MCQScreenState extends State<MCQScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                if (percentage >= 60) {
-                  await unlockNextQuiz();
-                  context.pop(
-                      true); // 👈 Pass true to tell LectureScreen to refresh
-                } else {
-                  showToast(message: "You did not pass the quiz");
-                  context.pop(
-                      false); // 👈 (Optional) If failed, you can pass false
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-              child: const Text("Submit", style: TextStyle(fontSize: 16)),
-            ),
-          ),
+          submitLoading
+              ? const SpinLoader()
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (percentage >= 60) {
+                        await unlockNextQuiz();
+                        context.pop(
+                            true); // 👈 Pass true to tell LectureScreen to refresh
+                      } else {
+                        showToast(message: "You did not pass the quiz");
+                        context.pop(
+                            false); // 👈 (Optional) If failed, you can pass false
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 16),
+                    ),
+                    child: const Text("Submit", style: TextStyle(fontSize: 16)),
+                  ),
+                ),
         ],
       ),
     );
