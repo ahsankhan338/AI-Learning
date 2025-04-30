@@ -1,10 +1,8 @@
-import 'package:aieducator/api/auth_api.dart';
+
 import 'package:aieducator/components/spinner.dart';
-import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -331,36 +329,36 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
 
                     const SizedBox(height: 30),
-                    const Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.white70)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('or', style: TextStyle(color: Colors.white70)),
-                        ),
-                        Expanded(child: Divider(color: Colors.white70)),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
+                    // const Row(
+                    //   children: [
+                    //     Expanded(child: Divider(color: Colors.white70)),
+                    //     Padding(
+                    //       padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    //       child: Text('or', style: TextStyle(color: Colors.white70)),
+                    //     ),
+                    //     Expanded(child: Divider(color: Colors.white70)),
+                    //   ],
+                    // ),
+                    // const SizedBox(height: 30),
 
                     // Google Sign Up Button
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.grey,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      icon: const FaIcon(FontAwesomeIcons.google, color: Colors.white),
-                      label: Text('Sign Up with Google', style: AppTextStyles.buttonTextStyles()),
-                      onPressed: () {
-                        // Google sign up logic would go here
-                      },
-                    ),
-                    const SizedBox(height: 20),
+                    // ElevatedButton.icon(
+                    //   style: ElevatedButton.styleFrom(
+                    //     minimumSize: const Size(double.infinity, 50),
+                    //     backgroundColor: Colors.grey,
+                    //     padding: const EdgeInsets.symmetric(
+                    //         horizontal: 20, vertical: 12),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(10),
+                    //     ),
+                    //   ),
+                    //   icon: const FaIcon(FontAwesomeIcons.google, color: Colors.white),
+                    //   label: Text('Sign Up with Google', style: AppTextStyles.buttonTextStyles()),
+                    //   onPressed: () {
+                    //     // Google sign up logic would go here
+                    //   },
+                    // ),
+                    // const SizedBox(height: 20),
 
                     // Login Link
                     Text.rich(

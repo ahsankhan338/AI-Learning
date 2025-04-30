@@ -3,6 +3,7 @@ import 'package:aieducator/components/spinner.dart';
 import 'package:aieducator/components/toast.dart';
 import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/provider/auth_provider.dart';
+import 'package:aieducator/utility/go_router_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -122,7 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          context.push(AppRoutes.forgotPassword.path);
+                        },
                         child: const Text('Forgot password?',
                             style: TextStyle(color: Colors.white70)),
                       ),
@@ -188,38 +191,38 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: AppTextStyles.buttonTextStyles()),
                         ),
 
-                  const SizedBox(height: 45),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.white70)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child:
-                            Text('or', style: TextStyle(color: Colors.white70)),
-                      ),
-                      Expanded(child: Divider(color: Colors.white70)),
-                    ],
-                  ),
+                  // const SizedBox(height: 45),
+                  // const Row(
+                  //   children: [
+                  //     Expanded(child: Divider(color: Colors.white70)),
+                  //     Padding(
+                  //       padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  //       child:
+                  //           Text('or', style: TextStyle(color: Colors.white70)),
+                  //     ),
+                  //     Expanded(child: Divider(color: Colors.white70)),
+                  //   ],
+                  // ),
                   const SizedBox(height: 45),
 
                   // Google Sign In Button
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const FaIcon(FontAwesomeIcons.google,
-                        color: Colors.white),
-                    label: Text('Log In with Google',
-                        style: AppTextStyles.buttonTextStyles()),
-                    onPressed: () {},
-                  ),
-                  const SizedBox(height: 16),
+                  // ElevatedButton.icon(
+                  //   style: ElevatedButton.styleFrom(
+                  //     minimumSize: const Size(double.infinity, 50),
+                  //     backgroundColor: Colors.grey,
+                  //     padding: const EdgeInsets.symmetric(
+                  //         horizontal: 20, vertical: 12),
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(10),
+                  //     ),
+                  //   ),
+                  //   icon: const FaIcon(FontAwesomeIcons.google,
+                  //       color: Colors.white),
+                  //   label: Text('Log In with Google',
+                  //       style: AppTextStyles.buttonTextStyles()),
+                  //   onPressed: () {},
+                  // ),
+                  // const SizedBox(height: 16),
 
                   // Register Link
                   Text.rich(

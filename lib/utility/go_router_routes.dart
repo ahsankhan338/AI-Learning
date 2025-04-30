@@ -18,6 +18,10 @@ class AppRoutes {
   static const splash = AppRoute(path: '/splash', name: 'splash');
   static const login = AppRoute(path: '/login', name: 'login');
   static const register = AppRoute(path: '/login/register', name: 'register');
+  static const forgotPassword = AppRoute(
+    path: '/login/forgot-password',
+    name: 'forgotPassword',
+  );
 
   // Main Routes
   static const home = AppRoute(path: '/home', name: 'home');

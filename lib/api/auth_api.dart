@@ -34,7 +34,7 @@ class Authentication {
         };
       }
 
-      throw Exception('LoggedIn Failed ${responseBody['message']}');
+      throw Exception('Login Failed: ${responseBody['message']}');
     } on http.ClientException catch (e) {
       throw NetworkException(e.message);
     } catch (e) {
@@ -73,6 +73,41 @@ class Authentication {
       }
 
       throw Exception('Registration Failed: ${responseBody['message']}');
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  // 🔥 Forgot Password API
+  Future<void> forgotPassword({
+    required String email,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final uri = Uri.parse('$_apiBaseURL/authentication/forgot-password');
+
+      final Response response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email,
+              'newPassword': newPassword,
+              'confirmPassword': confirmPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return; // ✅ Success
+      }
+
+      throw Exception('Forgot Password Failed: ${responseBody['message']}');
     } on http.ClientException catch (e) {
       throw NetworkException(e.message);
     } catch (e) {

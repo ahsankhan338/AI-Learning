@@ -2,6 +2,7 @@ import 'package:aieducator/components/bottom_navigation_bar.dart';
 import 'package:aieducator/models/quiz_model.dart';
 import 'package:aieducator/provider/auth_provider.dart';
 import 'package:aieducator/provider/routes_refresh_notifier.dart';
+import 'package:aieducator/screens/auth/forgot_password.dart';
 import 'package:aieducator/screens/auth/login_screen.dart';
 import 'package:aieducator/screens/auth/register_page.dart';
 import 'package:aieducator/screens/certificates/certificate_screen.dart';
@@ -55,6 +56,11 @@ class AppRouter {
             path: 'register',
             name: 'register',
             builder: (_, __) => const RegisterPage(),
+          ),
+          GoRoute(
+            path: 'forgot-password',
+            name: 'forgotPassword',
+            builder: (_, __) => const ForgotPasswordScreen(),
           ),
         ],
       );

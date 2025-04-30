@@ -2,6 +2,7 @@ import 'package:aieducator/api/categories_api.dart';
 import 'package:aieducator/constants/constants.dart';
 import 'package:aieducator/models/category_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -61,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         "Availaible Subjects",
                         style: AppTextStyles.bodyTitle(),
                       ),
-                    
                     ],
                   ),
                   SizedBox(
@@ -76,10 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 10,
                     children: _categories.map((item) {
+                      final String? _apiBaseURL = dotenv.env['API_BASE_URL'];
                       final String imageURL = item.imageUrl
                           .toString()
                           .replaceFirst(
-                              "http://localhost:3001", "http://10.0.2.2:3001");
+                              "http://localhost:3001", _apiBaseURL.toString());
                       const double size = 62.0;
 
                       return InkWell(

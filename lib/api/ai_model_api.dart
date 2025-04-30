@@ -1,15 +1,16 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class AiModelApi {
   Future<dynamic> getAIResponse(String prompt) async {
+    final String? aiModelKey = dotenv.env['AI_MODEL_KEY'];
     final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
 
     final response = await http.post(
       url,
       headers: {
-        'Authorization':
-            'Bearer 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',
+        'Authorization': 'Bearer $aiModelKey',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
